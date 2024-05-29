@@ -69,6 +69,8 @@ batch = first(loader)
 
 f, ax = plt.subplots(2, 1, figsize=(8, 4))
 
+print("Visualizing <3")
+
 ax[0].imshow(np.hstack(batch[0][:, 0, 80]),cmap='gray')
 ax[0].set_title("Batch of Images")
 
