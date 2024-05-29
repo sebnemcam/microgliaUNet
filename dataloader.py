@@ -79,3 +79,4 @@ ax[1].set_title("Batch of Segmentations")
 
 plt.tight_layout()
 plt.show()
+plt.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/")
