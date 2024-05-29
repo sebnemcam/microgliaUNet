@@ -67,7 +67,7 @@ loader = DataLoader(ds, batch_size=5)
 batch = first(loader)
 #print(batch[0].shape)
 
-f, ax = plt.subplots(2, 1, figsize=(8, 4))
+fig, ax = plt.subplots(2, 1, figsize=(8, 4))
 
 print("Visualizing <3")
 
@@ -79,4 +79,4 @@ ax[1].set_title("Batch of Segmentations")
 
 plt.tight_layout()
 plt.show()
-plt.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/")
+fig.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/")
