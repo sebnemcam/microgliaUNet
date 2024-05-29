@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from tqdm import tqdm
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,6 +11,9 @@ import torch
 import monai
 from monai.utils import first
 from monai.data import ArrayDataset, DataLoader
+from monai.networks.nets import Unet
+from monai.networks.layers import Norm
+from monai.losses import DiceLoss
 from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, ScaleIntensity, LoadImage
 
 #!!!!!!PATH NEEDS TO BE ADJUSTED FOR HPC !!!!!!!!!
@@ -80,3 +84,20 @@ ax[1].set_title("Batch of Segmentations")
 plt.tight_layout()
 plt.show()
 fig.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/batches.png")
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+#initializing model
+
+model = Unet(
+    spatial_dims=3,
+    in_channels=4,
+    out_channels=4,
+    channels=(16, 32, 64, 128, 256),
+    strides=(2,2,2,2),
+    norm=Norm.BATCH,
+    #act=torch.nn.functional.sigmoid()
+).to(device)
+
+loss_funnction = DiceLoss(sigmoid=True)
+optimizer = torch.optim.Adam(model.parameters(), 1e-4)
