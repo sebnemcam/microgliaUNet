@@ -71,12 +71,6 @@ for slice_idx in range(0, num_slices, max(1, num_slices // 10)):  # sample up to
     plt.show()'''
 
 
-#build Dataloader
-#0 = img, 1 = seg
-loader = DataLoader(ds, batch_size=5)
-batch = first(loader)
-#print(batch[0].shape)
-
 #split data into train, test and validation set
 train_data, test_data = partition_dataset(ds, ratios=[0.8,0.2], shuffle=True)
 print(f"train_data 1, length: {len(train_data)}")
@@ -86,14 +80,20 @@ print(f"test_data, length: {len(test_data)}")
 print(f"train_data, length: {len(train_data)}")
 print(f"val_data, length: {len(val_data)}")
 
+#build Dataloader
+#0 = img, 1 = seg
+train_loader = DataLoader(train_data, batch_size=5)
+train_batch = first(train_loader)
+#print(batch[0].shape)
+
 fig, ax = plt.subplots(2, 1, figsize=(8, 4))
 
 print("Visualizing <3")
 
-ax[0].imshow(np.hstack(batch[0][:, 0, 80]),cmap='gray')
+ax[0].imshow(np.hstack(train_batch[0][:, 0, 80]),cmap='gray')
 ax[0].set_title("Batch of Images")
 
-ax[1].imshow(np.hstack(batch[1][:, 0, 80]),cmap='gray')
+ax[1].imshow(np.hstack(train_batch[1][:, 0, 80]),cmap='gray')
 ax[1].set_title("Batch of Segmentations")
 
 plt.tight_layout()
@@ -130,7 +130,7 @@ for epoch in range(1, max_epochs):
     model.train()
     epoch_loss = 0
     step = 0
-    for batch_data in tqdm(loader):
+    for batch_data in tqdm(train_loader):
         step += 1
         inputs, labels = (
             batch_data[0].to(device),
@@ -143,7 +143,7 @@ for epoch in range(1, max_epochs):
         optimizer.step()
         epoch_loss += loss.item()
         print(
-             f"{step}/{len(train_ds) // train_loader.batch_size}, "
+             f"{step}/{len(train_data) // train_loader.batch_size}, "
              f"train_loss: {loss.item():.4f}")
 
     epoch_loss /= step
@@ -153,3 +153,12 @@ for epoch in range(1, max_epochs):
     if epoch % val_interval == 0:
         model.eval()
 
+
+'''STILL TO DO
+    - Figure out which transforms to use
+    - Figure out best way to split the data and apply transforms
+    - add loaders for test & val
+    - train step and validation
+    - track metrics
+    - 5-fold cross Validation
+    - testing '''
