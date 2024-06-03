@@ -45,47 +45,97 @@ for i in range(len(seg_list)):
 
 #which transforms should be applied????, croping & flipping seems countereffective
 #should transforms only be applied to train set?
-transforms = Compose(
+img_transforms = Compose(
+    [
+        LoadImage(image_only=True),
+        EnsureChannelFirst(),
+        ScaleIntensity()
+    ]
+)
+
+basic_transforms = Compose(
     [
         LoadImage(image_only=True),
         EnsureChannelFirst(),
     ]
 )
-#zipped_data = list(zip(images,segmentations))
+
+# zip data into one list of image/segmenttaion pairs
+# (not exactly necessary but I get paranoid about accidentally messing up the sequences)
+zipped_data = list(zip(images,segmentations))
 #print(f"Zip length: {len(zipped_data)}")
 
+#split into train, test & validation files
+ratio_a = len(zipped_data)*0.8
+train_files_a = [zipped_data[i] for i in range(int(ratio_a))]
+test_images = [zipped_data[i][0] for i in range(int(ratio_a),len(zipped_data))]
+test_segmentations = [zipped_data[i][1] for i in range(int(ratio_a),len(zipped_data))]
 
-ds = ArrayDataset(images, transforms, segmentations, transforms)
-im, seg = ds[0]
-
-'''num_slices = im.shape[1]
-for slice_idx in range(0, num_slices, max(1, num_slices // 10)):  # sample up to 10 slices
-    #time.sleep(1)
-    plt.figure(figsize=(12, 6))
-    plt.subplot(1, 2, 1)
-    plt.title(f"Image Slice {slice_idx}")
-    plt.imshow(im.numpy()[0, slice_idx], cmap='gray')
-    plt.subplot(1, 2, 2)
-    plt.title(f"Segmentation Slice {slice_idx}")
-    plt.imshow(seg.numpy()[0, slice_idx], cmap='gray')
-    plt.show()'''
+ratio_b = len(train_files_a)*0.8
+train_images = [train_files_a[i][0] for i in range(int(ratio_b))]
+train_segmentations = [train_files_a[i][1] for i in range(int(ratio_b))]
+val_images = [train_files_a[i][0] for i in range(int(ratio_b),len(train_files_a))]
+val_segmentations = [train_files_a[i][1] for i in range(int(ratio_b),len(train_files_a))]
 
 
-#split data into train, test and validation set
-train_data, test_data = partition_dataset(ds, ratios=[0.8,0.2], shuffle=True)
-print(f"train_data 1, length: {len(train_data)}")
-train_data, val_data = partition_dataset(train_data,ratios=[0.8,0.2])
 
+'''
+print(f"Train length: {len(train_images)}")
+print(f"Test length: {len(test_images)}")
+print(f"Val length: {len(val_images)}")
+print(f"Train Files: {train_images}")
+print(f"Test Files: {test_images}")
+print(f"Val images: {val_images}")
+print(f"Val segs: {val_segmentations}")
+print(f"images: {images}")
+print(f"segs: {segmentations}")
+'''
+#create datasets from the files with respective transforms
+train_data = ArrayDataset(train_images, img_transforms,train_segmentations,basic_transforms)
+test_data = ArrayDataset(test_images,basic_transforms,test_segmentations,basic_transforms)
+val_data = ArrayDataset(val_images,basic_transforms,val_segmentations,basic_transforms)
+
+
+#visualizing some slices from the training data to make sure everything is fine
+im, seg = train_data[0]
+num_slices = im.shape[1]
+
+num_slices = im.shape[1]  # Assuming im has shape [1, slices, height, width]
+num_rows = (num_slices // 10)  # Number of rows for up to 10 slices per row
+fig, axes = plt.subplots(num_rows, 2, figsize=(12, 6 * num_rows))
+
+for idx, slice_idx in enumerate(range(0, num_slices, max(1, num_slices // 10))):  # Sample up to 10 slices
+    row = idx
+    # Image slice subplot
+    axes[row, 0].imshow(im.numpy()[0, slice_idx], cmap='gray')
+    axes[row, 0].set_title(f"Image Slice {slice_idx}")
+    axes[row, 0].axis('off')
+
+    # Segmentation slice subplot
+    axes[row, 1].imshow(seg.numpy()[0, slice_idx], cmap='gray')
+    axes[row, 1].set_title(f"Segmentation Slice {slice_idx}")
+    axes[row, 1].axis('off')
+plt.tight_layout()
+plt.show()
+#fig.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/slices.png")
+
+'''
 print(f"test_data, length: {len(test_data)}")
 print(f"train_data, length: {len(train_data)}")
 print(f"val_data, length: {len(val_data)}")
+'''
 
 #build Dataloader
-#0 = img, 1 = seg
 train_loader = DataLoader(train_data, batch_size=5)
 train_batch = first(train_loader)
 #print(batch[0].shape)
 
+test_loader = DataLoader(test_data)
+val_loader = DataLoader(val_data)
+val_batch = first(val_loader)
+#print(f"val_batch: {val_batch[1].shape}")
+
+'''
 fig, ax = plt.subplots(2, 1, figsize=(8, 4))
 
 print("Visualizing <3")
@@ -99,7 +149,7 @@ ax[1].set_title("Batch of Segmentations")
 plt.tight_layout()
 plt.show()
 #fig.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/batches.png")
-
+'''
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -107,8 +157,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 model = Unet(
     spatial_dims=3,
-    in_channels=4,
-    out_channels=4,
+    in_channels=1,
+    out_channels=1,
     channels=(16, 32, 64, 128, 256),
     strides=(2,2,2,2),
     norm=Norm.BATCH,
@@ -132,13 +182,13 @@ for epoch in range(1, max_epochs):
     step = 0
     for batch_data in tqdm(train_loader):
         step += 1
-        inputs, labels = (
+        imgs, segs = (
             batch_data[0].to(device),
             batch_data[1].to(device),
         )
         optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = loss_function(outputs, labels)
+        outputs = model(imgs)
+        loss = loss_function(outputs, segs)
         loss.backward()
         optimizer.step()
         epoch_loss += loss.item()
@@ -152,13 +202,20 @@ for epoch in range(1, max_epochs):
 
     if epoch % val_interval == 0:
         model.eval()
+        with torch.no_grad():
+            for val_data in val_loader:
+                val_img, val_seg = (
+                    val_data[0].to(device),
+                    val_data[1].to(device)
+                )
 
 
-'''STILL TO DO
+
+'''
+STILL TO DO
     - Figure out which transforms to use
-    - Figure out best way to split the data and apply transforms
-    - add loaders for test & val
     - train step and validation
     - track metrics
     - 5-fold cross Validation
-    - testing '''
+    - testing 
+'''
