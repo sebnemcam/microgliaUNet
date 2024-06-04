@@ -21,12 +21,13 @@ from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, 
 
 #!!!!!!PATH NEEDS TO BE ADJUSTED FOR HPC !!!!!!!!!
 
-#path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
-#path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
+path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
+path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
 
-path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
-path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
-directory = "/Users/sebnemcam/Desktop/Helmholtz/"
+#path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
+#path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
+#directory = "/Users/sebnemcam/Desktop/Helmholtz/"
+directory= "/lustre/groups/iterm/sebnem"
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
