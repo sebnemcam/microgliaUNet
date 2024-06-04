@@ -2,6 +2,7 @@ import logging
 import os
 import time
 
+import pandas as pd
 from monai.inferers import sliding_window_inference
 from tqdm import tqdm
 
@@ -27,7 +28,7 @@ path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia
 #path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 #path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
 #directory = "/Users/sebnemcam/Desktop/Helmholtz/"
-directory= "/lustre/groups/iterm/sebnem"
+directory= "/lustre/groups/iterm/sebnem/"
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
@@ -120,7 +121,7 @@ for idx, slice_idx in enumerate(range(0, num_slices, max(1, num_slices // 10))):
     axes[row, 1].axis('off')
 plt.tight_layout()
 plt.show()
-#fig.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/slices.png")
+fig.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/slices.png")
 
 '''
 print(f"test_data, length: {len(test_data)}")
@@ -152,7 +153,8 @@ model = Unet(
     channels=(16, 32, 64, 128, 256),
     strides=(2,2,2,2),
     num_res_units=2,
-    norm=Norm.BATCH
+    norm=Norm.BATCH,
+    act=torch.nn.functional.leaky_relu()
 ).to(device)
 
 print("Checkpoint 2")
@@ -192,7 +194,7 @@ for epoch in range(1, max_epochs):
         epoch_loss += loss.item()
         print(
              f"{step}/{len(train_data) // train_loader.batch_size}, "
-             f"train_loss: {loss.item():.4f}")
+             f"train loss: {loss.item():.4f}")
 
     epoch_loss /= step
     epoch_loss_values.append(epoch_loss)
@@ -233,6 +235,39 @@ for epoch in range(1, max_epochs):
                     f"at epoch: {best_metric_epoch}"
                 )
 
+checkpoint = pd.DataFrame(
+    {'train loss': epoch_loss_values,
+     'dice values': metric_values,
+     'best metric epoch': best_metric_epoch,
+     'best metric': best_metric,
+     'model_state_dict': model.state_dict(),
+     'optimizer_state_dict': optimizer.state_dict(),
+    }
+)
+
+val_interval = 2
+plt.figure("train", (15, 5))
+plt.subplot(1, 2, 1)
+plt.title("Epoch Average Dice Loss")
+x = [i + 1 for i in range(len(checkpoint["train loss"]))]
+y = checkpoint["train loss"]
+plt.xlabel("#Epochs")
+plt.ylabel("Dice Loss")
+plt.plot(x, y)
+plt.plot(checkpoint["best metric epoch"],
+checkpoint["train loss"][checkpoint["best metric epoch"]], 'r*', markersize=8)
+plt.subplot(1, 2, 2)
+plt.title("Val Mean Dice Score")
+x = [val_interval * (i + 1) for i in range(len(checkpoint["dice values"]))]
+y = checkpoint["dice values"]
+plt.xlabel("#Epochs")
+plt.plot(x, y)
+plt.plot(checkpoint["best metric epoch"],
+checkpoint["dice values"][checkpoint["best metric epoch"]//2], 'r*', markersize=10)
+plt.annotate("Best Score[470, 0.9516]", xy=(checkpoint["best metric epoch"],
+checkpoint["dice values"][checkpoint["best metric epoch"]//2]))
+plt.savefig("LearningCurves.png")
+plt.show()
 
 
 '''
@@ -240,5 +275,4 @@ STILL TO DO
     - Figure out which transforms to use
     - track metrics
     - 5-fold cross Validation
-    - testing 
 '''
