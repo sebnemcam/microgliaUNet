@@ -201,6 +201,7 @@ for epoch in range(1, max_epochs):
     print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
     if epoch % val_interval == 0:
+        print("It is doing something")
         model.eval()
         with torch.no_grad():
             for val_data in val_loader:
