@@ -121,7 +121,7 @@ for idx, slice_idx in enumerate(range(0, num_slices, max(1, num_slices // 10))):
     axes[row, 1].axis('off')
 plt.tight_layout()
 plt.show()
-fig.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/slices.png")
+#fig.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/slices.png")
 
 '''
 print(f"test_data, length: {len(test_data)}")
@@ -154,7 +154,6 @@ model = Unet(
     strides=(2,2,2,2),
     num_res_units=2,
     norm=Norm.BATCH,
-    act=torch.nn.functional.leaky_relu()
 ).to(device)
 
 print("Checkpoint 2")
