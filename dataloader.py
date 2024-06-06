@@ -35,6 +35,8 @@ img_list = os.listdir(path_img)
 segmentations = []
 images = []
 
+print("I am inside the python file")
+
 for i in range(len(seg_list)):
     if "nii.gz" in seg_list[i] and img_list[i] == seg_list[i]:
 
