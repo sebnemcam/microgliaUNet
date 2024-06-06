@@ -268,8 +268,8 @@ plt.plot(checkpoint["best metric epoch"],
 checkpoint["dice values"][checkpoint["best metric epoch"]//2], 'r*', markersize=10)
 plt.annotate("Best Score[470, 0.9516]", xy=(checkpoint["best metric epoch"],
 checkpoint["dice values"][checkpoint["best metric epoch"]//2]))
-plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves.png")
 plt.show()
+plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves.png")
 
 
 '''
