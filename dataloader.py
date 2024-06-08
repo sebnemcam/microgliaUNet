@@ -13,22 +13,23 @@ import torch
 
 import monai
 from monai.utils import first
-from monai.data import ArrayDataset, DataLoader, partition_dataset, decollate_batch
+from monai.data import ArrayDataset, DataLoader, partition_dataset, decollate_batch, Dataset
 from monai.networks.nets import Unet
 from monai.networks.layers import Norm
 from monai.losses import DiceLoss
 from monai.metrics import DiceMetric
-from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, ScaleIntensity, LoadImage
+from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, ScaleIntensity, LoadImage, \
+    EnsureChannelFirstd, LoadImaged, Resized
 
 #!!!!!!PATH NEEDS TO BE ADJUSTED FOR HPC !!!!!!!!!
 
 path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
+directory= "/lustre/groups/iterm/sebnem/"
 
 #path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 #path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
 #directory = "/Users/sebnemcam/Desktop/Helmholtz/"
-directory= "/lustre/groups/iterm/sebnem/"
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
@@ -67,6 +68,14 @@ basic_transforms = Compose(
     ]
 )
 
+dic_trasforms = Compose(
+    [
+        LoadImaged(keys=['image','segmentation'],image_only=True),
+        EnsureChannelFirstd(keys=['image','segmentation']),
+        Resized(keys=['image','segmentation'],spatial_size=(128, 128, 128))
+    ]
+)
+
 # zip data into one list of image/segmenttaion pairs
 # (not exactly necessary but I get paranoid about accidentally messing up the sequences)
 zipped_data = list(zip(images,segmentations))
@@ -83,6 +92,17 @@ train_images = [train_files_a[i][0] for i in range(int(ratio_b))]
 train_segmentations = [train_files_a[i][1] for i in range(int(ratio_b))]
 val_images = [train_files_a[i][0] for i in range(int(ratio_b),len(train_files_a))]
 val_segmentations = [train_files_a[i][1] for i in range(int(ratio_b),len(train_files_a))]
+
+'''
+test_files = [zipped_data[i] for i in range(int(ratio_a),len(zipped_data))]
+train_files = [train_files_a[i] for i in range(int(ratio_b))]
+val_files = [train_files_a[i] for i in range(int(ratio_b),len(train_files_a))]
+
+train_set = Dataset(train_files,img_transforms)
+test_set = Dataset(test_files,img_transforms)
+val_set = Dataset(val_files,img_transforms)
+'''
+
 
 '''
 print(f"Train length: {len(train_images)}")
@@ -102,14 +122,14 @@ val_data = ArrayDataset(val_images,basic_transforms,val_segmentations,basic_tran
 
 
 #visualizing some slices from the training data to make sure everything is fine
+#train_data = Dataset(train_files_a,img_transforms)
 im, seg = train_data[0]
 num_slices = im.shape[1]
-print(im.shape)
+#print(im.shape)
 
 num_slices = im.shape[1]
 num_rows = (num_slices // 10)
 fig, axes = plt.subplots(num_rows, 2, figsize=(12, 6 * num_rows))
-
 for idx, slice_idx in enumerate(range(0, num_slices, max(1, num_slices // 10))):  # Sample up to 10 slices
     row = idx
     # Image slice subplot
@@ -131,16 +151,22 @@ print(f"train_data, length: {len(train_data)}")
 print(f"val_data, length: {len(val_data)}")
 '''
 
+#train_loader = DataLoader(train_set, batch_size=1)
+#test_loader = DataLoader(test_set,batch_size=1)
+#val_loader = DataLoader(val_set,batch_size=1)
+
 #build Dataloader
 train_loader = DataLoader(train_data, batch_size=1)
 train_batch = first(train_loader)
-print(train_batch[0].shape)
+#print(train_batch[0].shape)
 #print(torch.reshape(train_batch[0],(1,1,128,128,128)))
 
 test_loader = DataLoader(test_data)
 val_loader = DataLoader(val_data)
 val_batch = first(val_loader)
 #print(f"val_batch: {val_batch[1].shape}")
+train_batch = first(train_loader)
+#print(train_batch[0].shape)
 
 print("Checkpoint 1")
 
@@ -168,7 +194,7 @@ metric_values = []
 epoch_loss_values = []
 
 max_epochs = 500
-val_interval = 2
+val_interval = 1
 best_metric = -1
 
 print("Checkpoint 3")
@@ -178,17 +204,17 @@ for epoch in range(1, max_epochs):
     model.train()
     epoch_loss = 0
     step = 0
-    for batch_data in tqdm(train_loader):
+    for batch_data in test_loader:
         step += 1
         img, seg = (
             batch_data[0].to(device),
             batch_data[1].to(device),
         )
-        print(f"Input to model: {img.size()}")
-        print(f"Segmentations: {seg.size()}")
+        #print(f"Input to model: {img.size()}")
+        #print(f"Segmentations: {seg.size()}")
         optimizer.zero_grad()
         outputs = model(img)
-        print(f"Output from model: {outputs.shape}")
+        #print(f"Output from model: {outputs.shape}")
         loss = loss_function(outputs, seg)
         loss.backward()
         optimizer.step()
@@ -202,7 +228,7 @@ for epoch in range(1, max_epochs):
     print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
     if epoch % val_interval == 0:
-        print("It is doing something")
+        print("Validation")
         model.eval()
         with torch.no_grad():
             for val_data in val_loader:
@@ -223,29 +249,30 @@ for epoch in range(1, max_epochs):
                 metric = dice_metric.aggregate().item()
                 # reset the status for next validation round
                 dice_metric.reset()
-
                 metric_values.append(metric)
+                print(f"Dice Value: {metric}")
+
                 if metric > best_metric:
                     best_metric = metric
                     best_metric_epoch = epoch + 1
                     torch.save(model.state_dict(), os.path.join(
                         directory, "best_metric_model.pth"))
                     print("saved new best metric model")
-                print(
-                    f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
-                    f"\nbest mean dice: {best_metric:.4f} "
-                    f"at epoch: {best_metric_epoch}"
-                )
+                    print(
+                        f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
+                        f"\nbest mean dice: {best_metric:.4f} "
+                        f"at epoch: {best_metric_epoch}"
+                    )
 
-checkpoint = pd.DataFrame(
-    {'train loss': epoch_loss_values,
+
+checkpoint = {
+
+     'train loss': epoch_loss_values,
      'dice values': metric_values,
      'best metric epoch': best_metric_epoch,
      'best metric': best_metric,
-     'model_state_dict': model.state_dict(),
-     'optimizer_state_dict': optimizer.state_dict(),
-    }
-)
+}
+
 
 val_interval = 2
 plt.figure("train", (15, 5))
@@ -255,21 +282,26 @@ x = [i + 1 for i in range(len(checkpoint["train loss"]))]
 y = checkpoint["train loss"]
 plt.xlabel("#Epochs")
 plt.ylabel("Dice Loss")
+
 plt.plot(x, y)
 plt.plot(checkpoint["best metric epoch"],
 checkpoint["train loss"][checkpoint["best metric epoch"]], 'r*', markersize=8)
+
 plt.subplot(1, 2, 2)
 plt.title("Val Mean Dice Score")
 x = [val_interval * (i + 1) for i in range(len(checkpoint["dice values"]))]
 y = checkpoint["dice values"]
 plt.xlabel("#Epochs")
+
 plt.plot(x, y)
 plt.plot(checkpoint["best metric epoch"],
 checkpoint["dice values"][checkpoint["best metric epoch"]//2], 'r*', markersize=10)
 plt.annotate("Best Score[470, 0.9516]", xy=(checkpoint["best metric epoch"],
 checkpoint["dice values"][checkpoint["best metric epoch"]//2]))
+
 plt.show()
 plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves.png")
+#plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
 '''
