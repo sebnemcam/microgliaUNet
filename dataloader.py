@@ -19,7 +19,8 @@ from monai.networks.nets import Unet
 from monai.networks.layers import Norm
 from monai.losses import DiceLoss
 from monai.metrics import DiceMetric
-from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, ScaleIntensity, LoadImage, LoadImaged, Resized, ToTensord, RandFlipd
+from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, ScaleIntensity, LoadImage, LoadImaged, \
+    Resized, ToTensord, RandFlipd, AsDiscrete
 
 #!!!!!!PATH NEEDS TO BE ADJUSTED FOR HPC !!!!!!!!!
 
@@ -27,9 +28,9 @@ path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
 directory= "/lustre/groups/iterm/sebnem/"
 
-#path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
-#path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
-#directory = "/Users/sebnemcam/Desktop/Helmholtz/"
+path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
+path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
+directory = "/Users/sebnemcam/Desktop/Helmholtz/"
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
@@ -87,6 +88,7 @@ dic_transforms_train = Compose(
 dic_transforms = Compose(
     [
         LoadImaged(keys, ensure_channel_first=True, image_only=True),
+        Resized(keys,spatial_size=(128, 128, 128)),
         ToTensord(keys)
     ]
 )
@@ -148,13 +150,16 @@ print("Checkpoint 2")
 loss_function = DiceLoss(sigmoid=True)
 optimizer = torch.optim.Adam(model.parameters(), 1e-4)
 dice_metric = torchmetrics.Dice(zero_division=1)
+dice_metric = DiceMetric(ignore_empty=False)
 metric_values = []
 
 epoch_loss_values = []
 
-max_epochs = 500
+max_epochs = 2
 val_interval = 1
 best_metric = -1
+post_pred = AsDiscrete(argmax=True)
+post_label=AsDiscrete()
 
 print("Checkpoint 3")
 for epoch in range(1, max_epochs):
@@ -163,7 +168,7 @@ for epoch in range(1, max_epochs):
     model.train()
     epoch_loss = 0
     step = 0
-    for batch_data in train_loader:
+    for batch_data in test_loader:
         step += 1
         img, seg = (
             batch_data['image'].to(device),
@@ -199,12 +204,10 @@ for epoch in range(1, max_epochs):
                 sw_batch_size = 4
                 val_outputs = sliding_window_inference(
                     val_img, roi_size, sw_batch_size, model)
-                val_outputs = [i for i in decollate_batch(val_outputs)]
-                val_seg = [i for i in decollate_batch(val_seg)]
-                print(f"Val_outputs: {val_outputs}")
-                print(f"Val_seg: {val_seg}")
+                val_outputs = [post_pred(i) for i in decollate_batch(val_outputs)]
+                val_seg = [post_label(i) for i in decollate_batch(val_seg)]
                 # compute metric for current iteration
-                dice_metric(np.array(val_outputs), np.array(val_seg))
+                dice_metric(y_pred=val_outputs, y=val_seg)
                 print(f"output: {val_outputs}/n label: {val_seg}")
 
                 # aggregate the final mean dice result
@@ -262,7 +265,7 @@ plt.annotate("Best Score[470, 0.9516]", xy=(checkpoint["best metric epoch"],
 checkpoint["dice values"][checkpoint["best metric epoch"]//2]))
 
 plt.show()
-plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves.png")
+#plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves.png")
 #plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
