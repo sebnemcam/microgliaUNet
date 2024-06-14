@@ -201,8 +201,10 @@ for epoch in range(1, max_epochs):
                     val_img, roi_size, sw_batch_size, model)
                 val_outputs = [i for i in decollate_batch(val_outputs)]
                 val_seg = [i for i in decollate_batch(val_seg)]
+                print(f"Val_outputs: {val_outputs}")
+                print(f"Val_seg: {val_seg}")
                 # compute metric for current iteration
-                dice_metric(val_outputs, val_seg)
+                dice_metric(np.array(val_outputs), np.array(val_seg))
                 print(f"output: {val_outputs}/n label: {val_seg}")
 
                 # aggregate the final mean dice result
