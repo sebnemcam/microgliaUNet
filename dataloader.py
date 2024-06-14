@@ -155,16 +155,16 @@ metric_values = []
 
 epoch_loss_values = []
 
-max_epochs = 500
+max_epochs = 1
 val_interval = 1
 best_metric = -1
 post_pred = AsDiscrete(argmax=True)
 post_label=AsDiscrete()
 
 print("Checkpoint 3")
-for epoch in range(1, max_epochs):
+for epoch in range(0, max_epochs):
     print("-" * 10)
-    print(f"epoch {epoch}/{max_epochs}")
+    print(f"epoch {epoch+1}/{max_epochs}")
     model.train()
     epoch_loss = 0
     step = 0
@@ -208,7 +208,7 @@ for epoch in range(1, max_epochs):
                 val_seg = [post_label(i) for i in decollate_batch(val_seg)]
                 # compute metric for current iteration
                 dice_metric(y_pred=val_outputs, y=val_seg)
-                print(f"output: {val_outputs}/n label: {val_seg}")
+                #print(f"output: {val_outputs}/n label: {val_seg}")
 
                 # aggregate the final mean dice result
                 metric = dice_metric.aggregate().item()
@@ -230,39 +230,29 @@ for epoch in range(1, max_epochs):
                     )
 
 
+'''
 checkpoint =pd.DataFrame( {
 
      'train loss': epoch_loss_values,
-     'dice values': metric_values,
-     'best metric epoch': best_metric_epoch,
-     'best metric': best_metric,
+     'dice values': metric_values
 })
+'''
 
 
 val_interval = 2
 plt.figure("train", (15, 5))
 plt.subplot(1, 2, 1)
 plt.title("Epoch Average Dice Loss")
-x = [i + 1 for i in range(len(checkpoint["train loss"]))]
-y = checkpoint["train loss"]
+x = [i + 1 for i in range(len(epoch_loss_values))]
+y = epoch_loss_values
 plt.xlabel("#Epochs")
 plt.ylabel("Dice Loss")
 
-plt.plot(x, y)
-plt.plot(checkpoint["best metric epoch"],
-checkpoint["train loss"][checkpoint["best metric epoch"]], 'r*', markersize=8)
-
 plt.subplot(1, 2, 2)
 plt.title("Val Mean Dice Score")
-x = [val_interval * (i + 1) for i in range(len(checkpoint["dice values"]))]
-y = checkpoint["dice values"]
+x = [val_interval * (i + 1) for i in range(len(metric_values))]
+y = metric_values
 plt.xlabel("#Epochs")
-
-plt.plot(x, y)
-plt.plot(checkpoint["best metric epoch"],
-checkpoint["dice values"][checkpoint["best metric epoch"]//2], 'r*', markersize=10)
-plt.annotate("Best Score[470, 0.9516]", xy=(checkpoint["best metric epoch"],
-checkpoint["dice values"][checkpoint["best metric epoch"]//2]))
 
 plt.show()
 plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves.png")
