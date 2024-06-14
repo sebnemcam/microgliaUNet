@@ -155,7 +155,7 @@ metric_values = []
 
 epoch_loss_values = []
 
-max_epochs = 2
+max_epochs = 500
 val_interval = 1
 best_metric = -1
 post_pred = AsDiscrete(argmax=True)
