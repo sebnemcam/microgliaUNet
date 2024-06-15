@@ -211,28 +211,24 @@ for epoch in range(0, max_epochs):
                 #print(f"output: {val_outputs}/n label: {val_seg}")
 
                 # aggregate the final mean dice result
-                metric = dice_metric.aggregate().item()
+            metric = dice_metric.aggregate().item()
                 # reset the status for next validation round
-                dice_metric.reset()
-                metric_values.append(metric)
-                print(f"Dice Value: {metric}")
+            dice_metric.reset()
+            metric_values.append(metric)
+            print(f"Dice Value: {metric}")
 
-                if metric > best_metric:
-                    best_metric = metric
-                    best_metric_epoch = epoch + 1
-                    torch.save(model.state_dict(), os.path.join(
-                        directory, "best_metric_model.pth"))
-                    print("saved new best metric model")
-                    print(
-                        f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
-                        f"\nbest mean dice: {best_metric:.4f} "
-                        f"at epoch: {best_metric_epoch}"
-                    )
+            if metric > best_metric:
+                best_metric = metric
+                best_metric_epoch = epoch + 1
+                torch.save(model.state_dict(), os.path.join(
+                            directory, "best_metric_model.pth"))
+                print("saved new best metric model")
+                print(
+                    f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
+                    f"\nbest mean dice: {best_metric:.4f} "
+                    f"at epoch: {best_metric_epoch}"
+                )
 
-'''print(f"losses: {len(epoch_loss_values)}")
-print(f"dice values: {len(metric_values)}")
-print(f"best epoch: {len(best_metric_epoch)}")
-print(f"best dice: {len(best_metric)}")'''
 
 
 '''checkpoint =pd.DataFrame( {
