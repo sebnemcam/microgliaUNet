@@ -155,7 +155,7 @@ metric_values = []
 
 epoch_loss_values = []
 
-max_epochs = 1
+max_epochs = 1000
 val_interval = 1
 best_metric = -1
 post_pred = AsDiscrete(argmax=True)
@@ -255,7 +255,7 @@ y = metric_values
 plt.xlabel("#Epochs")
 
 plt.show()
-plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves.png")
+plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves1000.png")
 #plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
