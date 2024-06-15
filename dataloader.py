@@ -229,13 +229,13 @@ for epoch in range(0, max_epochs):
                         f"at epoch: {best_metric_epoch}"
                     )
 
-print(f"losses: {len(epoch_loss_values)}")
+'''print(f"losses: {len(epoch_loss_values)}")
 print(f"dice values: {len(metric_values)}")
 print(f"best epoch: {len(best_metric_epoch)}")
-print(f"best dice: {len(best_metric)}")
+print(f"best dice: {len(best_metric)}")'''
 
 
-checkpoint =pd.DataFrame( {
+'''checkpoint =pd.DataFrame( {
 
      'train_loss': epoch_loss_values,
      'val_dice': metric_values,
@@ -265,12 +265,24 @@ plt.plot(x, y)
 plt.plot(checkpoint["best_metric_epoch"],
 checkpoint["val_dice"][checkpoint["best_metric_epoch"]//2], 'r*', markersize=10)
 plt.annotate("Best Score[470, 0.9516]", xy=(checkpoint["best_metric_epoch"],
-checkpoint["val_dice"][checkpoint["best_metric_epoch"]//2]))
+checkpoint["val_dice"][checkpoint["best_metric_epoch"]//2]))'''
 
+# Plotting the loss and dice scores
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.plot(range(1, len(epoch_loss_values) + 1), epoch_loss_values)
+plt.title("Epoch Loss")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
 
+plt.subplot(1, 2, 2)
+plt.plot(range(1, len(metric_values) + 1), metric_values)
+plt.title("Dice Metric")
+plt.xlabel("Epochs")
+plt.ylabel("Dice Score")
 
 plt.show()
-plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves1000.png")
+plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_MPL.png")
 #plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
