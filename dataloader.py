@@ -278,7 +278,7 @@ plt.xlabel("Epochs")
 plt.ylabel("Dice Score")
 
 plt.show()
-plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_MPL.png")
+plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves1000.png")
 #plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
