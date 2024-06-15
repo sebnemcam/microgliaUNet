@@ -229,30 +229,45 @@ for epoch in range(0, max_epochs):
                         f"at epoch: {best_metric_epoch}"
                     )
 
+print(f"losses: {len(epoch_loss_values)}")
+print(f"dice values: {len(metric_values)}")
+print(f"best epoch: {len(best_metric_epoch)}")
+print(f"best dice: {len(best_metric)}")
 
-'''
+
 checkpoint =pd.DataFrame( {
 
-     'train loss': epoch_loss_values,
-     'dice values': metric_values
+     'train_loss': epoch_loss_values,
+     'val_dice': metric_values,
+     'best_metric_epoch': best_metric_epoch,
+     'best_metric':best_metric
 })
-'''
+
 
 
 val_interval = 2
 plt.figure("train", (15, 5))
 plt.subplot(1, 2, 1)
 plt.title("Epoch Average Dice Loss")
-x = [i + 1 for i in range(len(epoch_loss_values))]
-y = epoch_loss_values
+x = [i + 1 for i in range(len(checkpoint["train_loss"]))]
+y = checkpoint["train_loss"]
 plt.xlabel("#Epochs")
 plt.ylabel("Dice Loss")
-
+plt.plot(x, y)
+plt.plot(checkpoint["best_metric_epoch"],
+checkpoint["train_loss"][checkpoint["best_metric_epoch"]], 'r*', markersize=8)
 plt.subplot(1, 2, 2)
 plt.title("Val Mean Dice Score")
-x = [val_interval * (i + 1) for i in range(len(metric_values))]
-y = metric_values
+x = [val_interval * (i + 1) for i in range(len(checkpoint["val_dice"]))]
+y = checkpoint["val_dice"]
 plt.xlabel("#Epochs")
+plt.plot(x, y)
+plt.plot(checkpoint["best_metric_epoch"],
+checkpoint["val_dice"][checkpoint["best_metric_epoch"]//2], 'r*', markersize=10)
+plt.annotate("Best Score[470, 0.9516]", xy=(checkpoint["best_metric_epoch"],
+checkpoint["val_dice"][checkpoint["best_metric_epoch"]//2]))
+
+
 
 plt.show()
 plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves1000.png")
