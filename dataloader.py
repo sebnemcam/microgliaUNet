@@ -253,7 +253,7 @@ axs[1].set_title('Dice Score for Different Learning Rates')
 axs[1].legend()
 
 plt.show()
-plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_lr.png")
+plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_cel.png")
 # plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
