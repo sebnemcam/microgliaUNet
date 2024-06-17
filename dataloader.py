@@ -207,11 +207,11 @@ for lr in learning_rates:
                         val_data['image'].to(device),
                         val_data['segmentation'].to(device)
                     )
-                    sw_batch_size = 1
-                    val_outputs = sliding_window_inference(
-                        val_img, sw_batch_size, model)
-                    val_outputs = [post_pred(i) for i in decollate_batch(val_outputs)]
-                    val_seg = [post_label(i) for i in decollate_batch(val_seg)]
+                    #sw_batch_size = 1
+                    #roi_size = [128,128,128]
+                    #val_outputs = sliding_window_inference(
+                        #val_img, roi_size,sw_batch_size, model)
+                    val_outputs = model(val_img)
                     # compute metric for current iteration
                     dice_metric(y_pred=val_outputs, y=val_seg)
                     # print(f"output: {val_outputs}/n label: {val_seg}")
