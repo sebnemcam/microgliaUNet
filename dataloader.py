@@ -147,7 +147,7 @@ model = Unet(
 
 print("Checkpoint 2")
 
-learning_rates = [1e-2,1e-3,1e-4,1e-5]
+learning_rates = [1e-5] #1e-2,1e-3,1e-4,
 loss_function = DiceLoss()
 #loss_function = torch.nn.CrossEntropyLoss()
 #dice_metric = torchmetrics.Dice(zero_division=1)
