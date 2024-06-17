@@ -150,8 +150,8 @@ print("Checkpoint 2")
 learning_rates = [1e-5] #1e-2,1e-3,1e-4,
 loss_function = DiceLoss()
 #loss_function = torch.nn.CrossEntropyLoss()
-#dice_metric = torchmetrics.Dice(zero_division=1)
-dice_metric = DiceMetric(include_background=True,ignore_empty=False)
+dice_metric = torchmetrics.Dice(zero_division=1)
+#dice_metric = DiceMetric(include_background=True,ignore_empty=False)
 metric_values = []
 
 epoch_loss_values = []
@@ -212,8 +212,9 @@ for lr in learning_rates:
                     #val_outputs = sliding_window_inference(
                         #val_img, roi_size,sw_batch_size, model)
                     val_outputs = model(val_img)
+                    print(val_outputs)
                     # compute metric for current iteration
-                    dice_metric(y_pred=val_outputs, y=val_seg)
+                    dice_metric(preds=val_outputs,target=val_seg)
                     # print(f"output: {val_outputs}/n label: {val_seg}")
 
                     # aggregate the final mean dice result
