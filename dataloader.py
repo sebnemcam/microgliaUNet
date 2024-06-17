@@ -116,7 +116,7 @@ for idx, slice_idx in enumerate(range(0, num_slices, max(1, num_slices // 10))):
     axes[row, 1].axis('off')
 plt.tight_layout()
 plt.show()
-#fig.savefig("/lustre/groups/iterm/sebnem/slurm_outputs/slices.png")
+fig.savefig("/lustre/groups/iterm/sebnem/slices.png")
 
 '''
 print(f"test_data, length: {len(test_data)}")
@@ -149,8 +149,8 @@ print("Checkpoint 2")
 
 learning_rates = [1e-2,1e-3,1e-4,1e-5]
 loss_function = DiceLoss()
-loss_function = torch.nn.CrossEntropyLoss()
-dice_metric = torchmetrics.Dice(zero_division=1)
+#loss_function = torch.nn.CrossEntropyLoss()
+#dice_metric = torchmetrics.Dice(zero_division=1)
 dice_metric = DiceMetric(ignore_empty=False)
 metric_values = []
 
@@ -207,10 +207,9 @@ for lr in learning_rates:
                         val_data['image'].to(device),
                         val_data['segmentation'].to(device)
                     )
-                    roi_size = (160, 160, 160)
-                    sw_batch_size = 4
+                    sw_batch_size = 1
                     val_outputs = sliding_window_inference(
-                        val_img, roi_size, sw_batch_size, model)
+                        val_img, sw_batch_size, model)
                     val_outputs = [post_pred(i) for i in decollate_batch(val_outputs)]
                     val_seg = [post_label(i) for i in decollate_batch(val_seg)]
                     # compute metric for current iteration
