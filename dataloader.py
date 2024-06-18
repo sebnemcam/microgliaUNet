@@ -203,8 +203,10 @@ for lr in learning_rates:
         if epoch % val_interval == 0:
             print("Validation")
             model.eval()
+            batch_idx = 0
             with torch.no_grad():
                 for val_data in val_loader:
+                    batch_idx += 1
                     val_img, val_seg = (
                         val_data['image'].to(device),
                         val_data['segmentation'].to(device)
@@ -221,7 +223,7 @@ for lr in learning_rates:
                         output_image = val_outputs_np[i, 0, :, :, :]  # Adjust index if necessary
                         nifti_img = nib.Nifti1Image(output_image, np.eye(4))
                         output_path = os.path.join(directory,
-                                                   f"/val_outputs/val_output_epoch{epoch + 1}_batch{val_data}_image{i}.nii.gz")
+                                                   f"/val_outputs/val_output_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz")
                         nib.save(nifti_img, output_path)
                         print(f"Saved {output_path}")
                     # compute metric for current iteration
