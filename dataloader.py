@@ -22,6 +22,8 @@ from monai.metrics import DiceMetric
 from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, ScaleIntensity, LoadImage, LoadImaged, \
     Resized, ToTensord, RandFlipd, AsDiscrete
 
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 #!!!!!!PATH NEEDS TO BE ADJUSTED FOR HPC !!!!!!!!!
 
 path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
@@ -30,7 +32,7 @@ directory= "/lustre/groups/iterm/sebnem/"
 
 #path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 #path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
-#directory = "/Users/sebnemcam/Desktop/Helmholtz/"
+d#irectory = "/Users/sebnemcam/Desktop/Helmholtz/"
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
@@ -212,11 +214,19 @@ for lr in learning_rates:
                     #val_outputs = sliding_window_inference(
                         #val_img, roi_size,sw_batch_size, model)
                     val_outputs = model(val_img)
-                    print(val_outputs)
+                    val_outputs_np = val_outputs.cpu().numpy()
+
+                    # Assuming val_outputs is a batch of images
+                    for i in range(val_outputs_np.shape[0]):
+                        output_image = val_outputs_np[i, 0, :, :, :]  # Adjust index if necessary
+                        nifti_img = nib.Nifti1Image(output_image, np.eye(4))
+                        output_path = os.path.join(directory,
+                                                   f"/val_outputs/val_output_epoch{epoch + 1}_batch{val_data}_image{i}.nii.gz")
+                        nib.save(nifti_img, output_path)
+                        print(f"Saved {output_path}")
                     # compute metric for current iteration
                     dice_metric(preds=val_outputs,target=val_seg)
                     # print(f"output: {val_outputs}/n label: {val_seg}")
-
                     # aggregate the final mean dice result
                 metric = dice_metric.aggregate().item()
                 # reset the status for next validation round
