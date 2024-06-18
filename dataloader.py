@@ -223,7 +223,7 @@ for lr in learning_rates:
                         output_image = val_outputs_np[i, 0, :, :, :]  # Adjust index if necessary
                         nifti_img = nib.Nifti1Image(output_image, np.eye(4))
                         output_path = os.path.join(directory,
-                                                   f"/val_outputs/val_output_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz")
+                                f"val_outputs/epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz")
                         nib.save(nifti_img, output_path)
                         print(f"Saved {output_path}")
                     # compute metric for current iteration
