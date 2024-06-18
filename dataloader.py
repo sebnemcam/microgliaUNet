@@ -211,6 +211,7 @@ for lr in learning_rates:
                         val_data['image'].to(device),
                         val_data['segmentation'].to(device)
                     )
+                    val_seg = val_seg.type(torch.short)
                     #sw_batch_size = 1
                     #roi_size = [128,128,128]
                     #val_outputs = sliding_window_inference(
