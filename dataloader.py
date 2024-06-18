@@ -32,7 +32,7 @@ directory= "/lustre/groups/iterm/sebnem/"
 
 #path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 #path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
-d#irectory = "/Users/sebnemcam/Desktop/Helmholtz/"
+#directory = "/Users/sebnemcam/Desktop/Helmholtz/"
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
