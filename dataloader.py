@@ -231,7 +231,7 @@ for lr in learning_rates:
                     dice_metric(preds=val_outputs,target=val_seg)
                     # print(f"output: {val_outputs}/n label: {val_seg}")
                     # aggregate the final mean dice result
-                metric = dice_metric.aggregate().item()
+                metric = dice_metric.compute().item()
                 # reset the status for next validation round
                 dice_metric.reset()
                 metric_values.append(metric)
