@@ -191,7 +191,7 @@ for lr in learning_rates:
             loss = loss_function(outputs, seg)
             loss.backward()
             optimizer.step()
-            scheduler.step()
+            scheduler.step(loss.item())
             epoch_loss += loss.item()
             print(
                 f"{step}/{len(train_data) // train_loader.batch_size}, "
