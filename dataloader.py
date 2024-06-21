@@ -17,7 +17,7 @@ from monai.utils import first
 from monai.data import ArrayDataset, DataLoader, partition_dataset, decollate_batch, Dataset, CacheDataset
 from monai.networks.nets import Unet
 from monai.networks.layers import Norm
-from monai.losses import DiceLoss
+from monai.losses import DiceLoss, DiceCELoss
 from monai.metrics import DiceMetric
 from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, ScaleIntensity, LoadImage, LoadImaged, \
     Resized, ToTensord, RandFlipd, AsDiscrete
@@ -118,7 +118,7 @@ for idx, slice_idx in enumerate(range(0, num_slices, max(1, num_slices // 10))):
     axes[row, 1].axis('off')
 plt.tight_layout()
 plt.show()
-fig.savefig("/lustre/groups/iterm/sebnem/slices.png")
+#fig.savefig("/lustre/groups/iterm/sebnem/slices.png")
 
 '''
 print(f"test_data, length: {len(test_data)}")
@@ -142,14 +142,13 @@ model = Unet(
     in_channels=1,
     out_channels=1,
     channels=(16, 32, 64, 128, 256),
+    up_kernel_size=5,
     strides=(2,2,2,2),
-    num_res_units=2,
-    norm=Norm.BATCH,
 ).to(device)
 
 print("Checkpoint 2")
 
-learning_rates = [1e-5] #1e-2,1e-3,1e-4,
+learning_rates = [1e-2] #1e-5,1e-3,1e-4,
 loss_function = DiceLoss()
 #loss_function = torch.nn.CrossEntropyLoss()
 dice_metric = torchmetrics.Dice(zero_division=1).to(device)
@@ -158,7 +157,7 @@ metric_values = []
 
 epoch_loss_values = []
 
-max_epochs = 1500
+max_epochs = 100
 val_interval = 1
 best_metric = -1
 post_pred = AsDiscrete(argmax=True)
@@ -169,7 +168,8 @@ print("Checkpoint 3")
 fig, axs = plt.subplots(1, 2, figsize=(18, 7))
 
 for lr in learning_rates:
-    optimizer = torch.optim.Adam(model.parameters(),lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer)
     for epoch in range(0, max_epochs):
         print(f"TRAINING WITH LEARNING RATE {lr}")
         print("-" * 10)
@@ -191,6 +191,7 @@ for lr in learning_rates:
             loss = loss_function(outputs, seg)
             loss.backward()
             optimizer.step()
+            scheduler.step()
             epoch_loss += loss.item()
             print(
                 f"{step}/{len(train_data) // train_loader.batch_size}, "
@@ -212,14 +213,9 @@ for lr in learning_rates:
                         val_data['segmentation'].to(device)
                     )
                     val_seg = val_seg.type(torch.short)
-                    #sw_batch_size = 1
-                    #roi_size = [128,128,128]
-                    #val_outputs = sliding_window_inference(
-                        #val_img, roi_size,sw_batch_size, model)
                     val_outputs = model(val_img)
                     val_outputs_np = val_outputs.cpu().numpy()
 
-                    # Assuming val_outputs is a batch of images
                     for i in range(val_outputs_np.shape[0]):
                         output_image = val_outputs_np[i, 0, :, :, :]  # Adjust index if necessary
                         nifti_img = nib.Nifti1Image(output_image, np.eye(4))
@@ -228,7 +224,7 @@ for lr in learning_rates:
                         nib.save(nifti_img, output_path)
                         print(f"Saved {output_path}")
                     # compute metric for current iteration
-                    dice_metric(preds=val_outputs,target=val_seg)
+                    dice_metric(preds=val_outputs, target=val_seg)
                     # print(f"output: {val_outputs}/n label: {val_seg}")
                     # aggregate the final mean dice result
                 metric = dice_metric.compute().item()
@@ -267,7 +263,7 @@ axs[1].legend()
 
 plt.show()
 plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_new.png")
-# plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
+#plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
 
