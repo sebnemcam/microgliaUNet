@@ -30,9 +30,9 @@ path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
 directory= "/lustre/groups/iterm/sebnem/"
 
-#path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
-#path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
-#directory = "/Users/sebnemcam/Desktop/Helmholtz/"
+path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
+path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
+directory = "/Users/sebnemcam/Desktop/Helmholtz/"
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
@@ -142,14 +142,14 @@ model = Unet(
     in_channels=1,
     out_channels=1,
     channels=(16, 32, 64, 128, 256),
-    up_kernel_size=5,
-    strides=(2,2,2,2),
+    up_kernel_size=3,
+    strides=(1,1,1,1)
 ).to(device)
 
 print("Checkpoint 2")
 
 learning_rates = [1e-2] #1e-5,1e-3,1e-4,
-loss_function = DiceLoss()
+loss_function = DiceLoss(sigmoid=True)
 #loss_function = torch.nn.CrossEntropyLoss()
 dice_metric = torchmetrics.Dice(zero_division=1).to(device)
 #dice_metric = DiceMetric(include_background=True,ignore_empty=False)
@@ -157,7 +157,7 @@ metric_values = []
 
 epoch_loss_values = []
 
-max_epochs = 100
+max_epochs = 2
 val_interval = 1
 best_metric = -1
 post_pred = AsDiscrete(argmax=True)
@@ -220,7 +220,7 @@ for lr in learning_rates:
                         output_image = val_outputs_np[i, 0, :, :, :]  # Adjust index if necessary
                         nifti_img = nib.Nifti1Image(output_image, np.eye(4))
                         output_path = os.path.join(directory,
-                                f"val_outputs/epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz")
+                                f"val_outputs_strides/epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz")
                         nib.save(nifti_img, output_path)
                         print(f"Saved {output_path}")
                     # compute metric for current iteration
@@ -236,8 +236,8 @@ for lr in learning_rates:
                 if metric > best_metric:
                     best_metric = metric
                     best_metric_epoch = epoch + 1
-                    torch.save(model.state_dict(), os.path.join(
-                        directory, "best_metric_model.pth"))
+                    #torch.save(model.state_dict(), os.path.join(
+                        #directory, "best_metric_model.pth"))
                     print("saved new best metric model")
                     print(
                         f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
@@ -262,8 +262,8 @@ axs[1].set_title('Dice Score for Different Learning Rates')
 axs[1].legend()
 
 plt.show()
-plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_new.png")
-#plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
+#plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_new.png")
+plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
 
