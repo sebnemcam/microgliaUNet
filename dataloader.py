@@ -20,7 +20,7 @@ from monai.networks.layers import Norm
 from monai.losses import DiceLoss, DiceCELoss
 from monai.metrics import DiceMetric
 from monai.transforms import EnsureChannelFirst, Compose, RandRotate90, Resize, ScaleIntensity, LoadImage, LoadImaged, \
-    Resized, ToTensord, RandFlipd, AsDiscrete
+    Resized, ToTensord, RandFlipd, AsDiscrete, Activations, Activationsd
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -30,9 +30,9 @@ path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
 directory= "/lustre/groups/iterm/sebnem/"
 
-#path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
-#path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
-#directory = "/Users/sebnemcam/Desktop/Helmholtz/"
+path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
+path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
+directory = "/Users/sebnemcam/Desktop/Helmholtz/"
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
@@ -143,7 +143,7 @@ model = Unet(
     out_channels=1,
     channels=(16, 32, 64, 128, 256),
     up_kernel_size=3,
-    strides=(1,1,1,1)
+    strides=(2,2,2,2)
 ).to(device)
 
 print("Checkpoint 2")
@@ -160,8 +160,7 @@ epoch_loss_values = []
 max_epochs = 2
 val_interval = 1
 best_metric = -1
-post_pred = AsDiscrete(argmax=True)
-post_label=AsDiscrete()
+post_pred = (Activations(sigmoid=True))
 
 print("Checkpoint 3")
 
@@ -214,17 +213,20 @@ for lr in learning_rates:
                     )
                     val_seg = val_seg.type(torch.short)
                     val_outputs = model(val_img)
+                    val_outputs[val_outputs < 0.5] = 0
+                    val_outputs[val_outputs >= 0.5] = 1
+                    #val_outputs = [post_pred(i) for i in decollate_batch(val_outputs)]
+                    dice_metric(preds=val_outputs, target=val_seg)
+                    #val_outputs = np.array(val_outputs)
                     val_outputs_np = val_outputs.cpu().numpy()
 
                     for i in range(val_outputs_np.shape[0]):
-                        output_image = val_outputs_np[i, 0, :, :, :]  # Adjust index if necessary
+                        output_image = val_outputs_np[i, 0, :, :, :]
                         nifti_img = nib.Nifti1Image(output_image, np.eye(4))
                         output_path = os.path.join(directory,
                                 f"val_outputs_strides/epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz")
                         nib.save(nifti_img, output_path)
                         print(f"Saved {output_path}")
-                    # compute metric for current iteration
-                    dice_metric(preds=val_outputs, target=val_seg)
                     # print(f"output: {val_outputs}/n label: {val_seg}")
                     # aggregate the final mean dice result
                 metric = dice_metric.compute().item()
@@ -262,8 +264,8 @@ axs[1].set_title('Dice Score for Different Learning Rates')
 axs[1].legend()
 
 plt.show()
-plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_new.png")
-#plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
+#plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_new.png")
+plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
 
