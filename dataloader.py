@@ -213,7 +213,7 @@ for lr in learning_rates:
                     )
                     val_seg = val_seg.type(torch.short)
                     val_outputs = model(val_img)
-		    val_outputs = [post_pred(i) for i in decollate_batch(val_outputs)]
+                    val_outputs = [post_pred(i) for i in decollate_batch(val_outputs)]
                     val_outputs[val_outputs < 0.5] = 0
                     val_outputs[val_outputs >= 0.5] = 1
                     dice_metric(preds=val_outputs, target=val_seg)
