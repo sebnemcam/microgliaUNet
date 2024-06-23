@@ -30,9 +30,9 @@ path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
 directory= "/lustre/groups/iterm/sebnem/"
 
-path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
-path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
-directory = "/Users/sebnemcam/Desktop/Helmholtz/"
+#path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
+#path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
+#directory = "/Users/sebnemcam/Desktop/Helmholtz/"
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
@@ -157,7 +157,7 @@ metric_values = []
 
 epoch_loss_values = []
 
-max_epochs = 2
+max_epochs = 2000
 val_interval = 1
 best_metric = -1
 post_pred = (Activations(sigmoid=True))
@@ -264,8 +264,8 @@ axs[1].set_title('Dice Score for Different Learning Rates')
 axs[1].legend()
 
 plt.show()
-#plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_new.png")
-plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
+plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_no_sig.png")
+#plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
 
