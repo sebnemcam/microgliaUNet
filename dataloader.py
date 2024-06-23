@@ -213,18 +213,18 @@ for lr in learning_rates:
                     )
                     val_seg = val_seg.type(torch.short)
                     val_outputs = model(val_img)
+		    val_outputs = [post_pred(i) for i in decollate_batch(val_outputs)]
                     val_outputs[val_outputs < 0.5] = 0
                     val_outputs[val_outputs >= 0.5] = 1
-                    #val_outputs = [post_pred(i) for i in decollate_batch(val_outputs)]
                     dice_metric(preds=val_outputs, target=val_seg)
-                    #val_outputs = np.array(val_outputs)
-                    val_outputs_np = val_outputs.cpu().numpy()
+                    val_outputs = np.array(val_outputs)
+                    val_outputs_np = val_outputs #.cpu().numpy()
 
                     for i in range(val_outputs_np.shape[0]):
                         output_image = val_outputs_np[i, 0, :, :, :]
                         nifti_img = nib.Nifti1Image(output_image, np.eye(4))
                         output_path = os.path.join(directory,
-                                f"val_outputs_strides/epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz")
+                                f"val_outputs_sig/epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz")
                         nib.save(nifti_img, output_path)
                         print(f"Saved {output_path}")
                     # print(f"output: {val_outputs}/n label: {val_seg}")
