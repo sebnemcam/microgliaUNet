@@ -156,7 +156,7 @@ metric_values = []
 epoch_loss_values = []
 lr_values = []
 
-max_epochs = 2
+max_epochs = 3000
 val_interval = 1
 best_metric = -1
 
