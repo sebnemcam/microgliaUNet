@@ -234,9 +234,9 @@ for epoch in range(0, max_epochs):
                         raw_nifti = nib.Nifti1Image(raw_image, np.eye(4))
 
                         #define file names
-                        output_filename = f"zip_files/zip_files/output_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
-                        seg_filename = f"zip_files/zip_files/seg_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
-                        raw_filename = f"zip_files/zip_files/raw_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
+                        output_filename = f"outputs/output_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
+                        seg_filename = f"gts/seg_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
+                        raw_filename = f"raws/raw_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
 
                         #save NIFTI images to temporary files
                         output_filepath = os.path.join(directory, output_filename)
@@ -246,6 +246,7 @@ for epoch in range(0, max_epochs):
                         nib.save(seg_nifti, seg_filepath)
                         nib.save(raw_nifti, raw_filepath)
 
+                        '''    
                         #add files to zip file
                         zipf.write(output_filepath, arcname=output_filename)
                         zipf.write(seg_filepath, arcname=seg_filename)
@@ -255,8 +256,9 @@ for epoch in range(0, max_epochs):
                         os.remove(output_filepath)
                         os.remove(seg_filepath)
                         os.remove(raw_filepath)
+                        '''
 
-                        print(f"Saved pred, seg & raw")
+                       # print(f"Saved pred, seg & raw")
 
             # aggregate the final mean dice result
             metric = dice_metric.compute().item()
@@ -299,7 +301,7 @@ axs[2].set_title('Learning Rate Schedule')
 axs[2].set_ylim(0,lr+0.005)
 
 plt.show()
-plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_no_sig.png")
+plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves.png")
 #plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
