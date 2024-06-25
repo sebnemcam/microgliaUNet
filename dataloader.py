@@ -299,7 +299,7 @@ axs[2].set_title('Learning Rate Schedule')
 axs[2].set_ylim(0,lr+0.005)
 
 plt.show()
-#plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_no_sig.png")
+plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves_no_sig.png")
 #plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
 
 
