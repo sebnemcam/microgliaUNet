@@ -205,60 +205,45 @@ for epoch in range(0, max_epochs):
         model.eval()
         batch_idx = 0
         with torch.no_grad():
-            zip_filename = os.path.join(directory, f"val_outputs_epoch{epoch + 1}.zip")
-            with ZipFile(zip_filename, 'w') as zipf:
-                for val_data in val_loader:
-                    batch_idx += 1
-                    val_img, val_seg = (
-                        val_data['image'].to(device),
-                        val_data['segmentation'].to(device)
-                    )
-                    val_seg = val_seg.type(torch.short)
-                    val_outputs = model(val_img)
-                    val_outputs[val_outputs < 0.5] = 0
-                    val_outputs[val_outputs >= 0.5] = 1
-                    dice_metric(preds=val_outputs, target=val_seg)
-                    val_outputs_np = val_outputs.cpu().numpy()
-                    val_seg_np = val_seg.cpu().numpy()
-                    val_img_np = val_img.cpu().numpy()
+            for val_data in val_loader:
+                batch_idx += 1
+                val_img, val_seg = (
+                    val_data['image'].to(device),
+                    val_data['segmentation'].to(device)
+                )
+                val_seg = val_seg.type(torch.short)
+                val_outputs = model(val_img)
+                val_outputs[val_outputs < 0.5] = 0
+                val_outputs[val_outputs >= 0.5] = 1
+                dice_metric(preds=val_outputs, target=val_seg)
+                val_outputs_np = val_outputs.cpu().numpy()
+                val_seg_np = val_seg.cpu().numpy()
+                val_img_np = val_img.cpu().numpy()
 
-                    for i in range(val_outputs_np.shape[0]):
-                        # Extract the ith sample, first channel, all depth, height, and width slices
-                        output_image = val_outputs_np[i, 0, :, :, :]
-                        seg_image = val_seg_np[i, 0, :, :, :]
-                        raw_image = val_img_np[i, 0, :, :, :]
+                for i in range(val_outputs_np.shape[0]):
+                    # Extract the ith sample, first channel, all depth, height, and width slices
+                    output_image = val_outputs_np[i, 0, :, :, :]
+                    seg_image = val_seg_np[i, 0, :, :, :]
+                    raw_image = val_img_np[i, 0, :, :, :]
 
-                        # Create NIfTI images
-                        output_nifti = nib.Nifti1Image(output_image, np.eye(4))
-                        seg_nifti = nib.Nifti1Image(seg_image, np.eye(4))
-                        raw_nifti = nib.Nifti1Image(raw_image, np.eye(4))
+                    # Create NIfTI images
+                    output_nifti = nib.Nifti1Image(output_image, np.eye(4))
+                    seg_nifti = nib.Nifti1Image(seg_image, np.eye(4))
+                    raw_nifti = nib.Nifti1Image(raw_image, np.eye(4))
 
-                        #define file names
-                        output_filename = f"outputs/output_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
-                        seg_filename = f"gts/seg_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
-                        raw_filename = f"raws/raw_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
+                    #define file names
+                    output_filename = f"outputs/output_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
+                    seg_filename = f"gts/seg_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
+                    raw_filename = f"raws/raw_epoch{epoch + 1}_batch{batch_idx}_image{i}.nii.gz"
 
-                        #save NIFTI images to temporary files
-                        output_filepath = os.path.join(directory, output_filename)
-                        seg_filepath = os.path.join(directory, seg_filename)
-                        raw_filepath = os.path.join(directory, raw_filename)
-                        nib.save(output_nifti, output_filepath)
-                        nib.save(seg_nifti, seg_filepath)
-                        nib.save(raw_nifti, raw_filepath)
-
-                        '''    
-                        #add files to zip file
-                        zipf.write(output_filepath, arcname=output_filename)
-                        zipf.write(seg_filepath, arcname=seg_filename)
-                        zipf.write(raw_filepath, arcname=raw_filename)
-
-                        # Remove temporary files
-                        os.remove(output_filepath)
-                        os.remove(seg_filepath)
-                        os.remove(raw_filepath)
-                        '''
-
-                       # print(f"Saved pred, seg & raw")
+                    #save NIFTI images to temporary files
+                    output_filepath = os.path.join(directory, output_filename)
+                    seg_filepath = os.path.join(directory, seg_filename)
+                    raw_filepath = os.path.join(directory, raw_filename)
+                    nib.save(output_nifti, output_filepath)
+                    nib.save(seg_nifti, seg_filepath)
+                    nib.save(raw_nifti, raw_filepath)
+                   # print(f"Saved pred, seg & raw")
 
             # aggregate the final mean dice result
             metric = dice_metric.compute().item()
