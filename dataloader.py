@@ -125,7 +125,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,thres
 metric_values = []
 epoch_loss_values = []
 lr_values = []
-best_metric = -1
+best_metric = []
 max_epochs = 3000
 val_interval = 1
 fold = -1
@@ -191,10 +191,11 @@ for train_data, val_data in kfold.split(data['image'],data['segmentation']):
                     val_outputs[val_outputs < 0.5] = 0
                     val_outputs[val_outputs >= 0.5] = 1
                     dice_metric(preds=val_outputs, target=val_seg)
-                    val_outputs_np = val_outputs.cpu().numpy()
-                    val_seg_np = val_seg.cpu().numpy()
-                    val_img_np = val_img.cpu().numpy()
+                    #val_outputs_np = val_outputs.cpu().numpy()
+                    #val_seg_np = val_seg.cpu().numpy()
+                    #val_img_np = val_img.cpu().numpy()
 
+                    '''
                     for i in range(val_outputs_np.shape[0]):
                         # Extract the ith sample, first channel, all depth, height, and width slices
                         output_image = val_outputs_np[i, 0, :, :, :]
@@ -219,6 +220,7 @@ for train_data, val_data in kfold.split(data['image'],data['segmentation']):
                         nib.save(seg_nifti, seg_filepath)
                         nib.save(raw_nifti, raw_filepath)
                        # print(f"Saved pred, seg & raw")
+                       '''
 
                 # aggregate the final mean dice result
                 metric = dice_metric.compute().item()
@@ -227,17 +229,8 @@ for train_data, val_data in kfold.split(data['image'],data['segmentation']):
                 metric_values[fold].append(metric)
                 print(f"Dice Value: {metric}")
 
-                if metric > best_metric:
-                    best_metric = metric
-                    best_metric_epoch = epoch + 1
-                    #torch.save(model.state_dict(), os.path.join(
-                        #directory, "best_metric_model.pth"))
-                    #print("saved new best metric model")
-                    print(
-                        f"current epoch: {epoch + 1} current mean dice: {metric:.4f}"
-                        f"\nbest mean dice: {best_metric:.4f} "
-                        f"at epoch: {best_metric_epoch}"
-                    )
+                if metric > best_metric[fold]:
+                    best_metric[fold] = metric
 
 
     # Plotting the loss and dice scores
@@ -268,4 +261,7 @@ for train_data, val_data in kfold.split(data['image'],data['segmentation']):
 
 plt.show()
 plt.savefig("/lustre/groups/iterm/sebnem/LearningCurves.png")
+
+df = {'Fold' : [0,1,2,3,4], 'Best Dice': best_metric}
+#df.to_csv(os.path.join(directory,'folds'))
 #plt.savefig("/Users/sebnemcam/Desktop/LearningCurves.png")
