@@ -128,19 +128,18 @@ test_fold = -1
 
 for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
 
-    fig, axs = plt.subplots(5, 3, figsize=(15, 10))
-
     train_val_data = [data[i] for i in train_val_idx]
 
     test_data = [data[i] for i in test_idx]
     test_set = CacheDataset(test_data, dic_transforms)
 
     test_fold += 1
+    print(f"TEST FOLD {test_fold}")
 
-    lr_values = []
-    metric_values = []
-    epoch_loss_values = []
-    best_metric = -1
+    fig, axs = plt.subplots(5, 3, figsize=(15, 10))
+    all_lr_values = []
+    all_metric_values = []
+    all_epoch_loss_values = []
 
     for i, (train_idx, val_idx) in enumerate(kfold.split(train_val_data)):
 
@@ -155,15 +154,22 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
         val_loader = DataLoader(val_set,batch_size=5)
 
         fold += 1
+        print(f"TRAIN FOLD {fold}")
+
+        lr_values = []
+        metric_values = []
+        epoch_loss_values = []
+        best_metric = -1
 
         for epoch in range(0, max_epochs):
+            #print(f"fold {fold}")
             print(f"TRAINING WITH LEARNING RATE {lr}")
             print("-" * 10)
             print(f"epoch {epoch + 1}/{max_epochs}")
             model.train()
             epoch_loss = 0
             step = 0
-            for batch_data in test_loader:
+            for batch_data in train_loader:
                 step += 1
                 img, seg, name = (
                     batch_data['image'].to(device),
@@ -186,6 +192,8 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
 
             epoch_loss /= step
             epoch_loss_values.append(epoch_loss)
+            print("append epoch loss")
+            print(f"list: {epoch_loss_values}")
             print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
             if epoch % val_interval == 0:
@@ -240,37 +248,48 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                         model_path = os.path.join(directory, "best_metric_model.pth")
                         torch.save(model.state_dict(),model_path)
 
+        all_lr_values.append(lr_values)
+        all_metric_values.append(metric_values)
+        all_epoch_loss_values.append(epoch_loss_values)
+
         # Plotting the loss and dice scores
-        colors = plt.cm.viridis(np.linspace(0, 1, 5))
+    colors = plt.cm.viridis(np.linspace(0, 1, 5))
 
-        axs[test_fold,0].plot(range(1, max_epochs + 1), epoch_loss_values, label=f'Fold {fold+1}', color=colors[fold])
-        axs[test_fold,1].plot(range(1, max_epochs + 1), metric_values, label=f'Fold {fold+1}', color=colors[fold])
-        axs[test_fold,2].plot(range(1, len(lr_values) + 1), lr_values, label=f'Fold {fold+1}', color=colors[fold])
+    for fold in range(5):
+        axs[test_fold,0].plot(range(1, max_epochs + 1), all_epoch_loss_values[fold], label=f'Fold {fold+1}', color=colors[fold])
+        axs[test_fold,1].plot(range(1, max_epochs + 1), all_metric_values[fold], label=f'Fold {fold+1}', color=colors[fold])
+        axs[test_fold,2].plot(range(1, len(lr_values) + 1), all_lr_values[fold], label=f'Fold {fold+1}', color=colors[fold])
 
-        axs[test_fold,0].set_xlabel('Epochs')
-        axs[test_fold,0].set_ylabel('Loss')
-        axs[test_fold,0].set_title('Dice Loss for Different Folds')
-        axs[test_fold,0].set_ylim(0,1)
-        axs[test_fold, 0].legend()
+    axs[test_fold,0].set_xlabel('Epochs')
+    axs[test_fold,0].set_ylabel('Loss')
+    axs[test_fold,0].set_title('Dice Loss for Different Folds')
+    axs[test_fold,0].set_ylim(0,1)
+    axs[test_fold, 0].legend()
 
-        axs[test_fold,1].set_xlabel('Epochs')
-        axs[test_fold,1].set_ylabel('Dice Score')
-        axs[test_fold,1].set_title('Dice Score for Different Folds')
-        axs[test_fold,1].set_ylim(0,1)
-        axs[test_fold, 1].legend()
+    axs[test_fold,1].set_xlabel('Epochs')
+    axs[test_fold,1].set_ylabel('Dice Score')
+    axs[test_fold,1].set_title('Dice Score for Different Folds')
+    axs[test_fold,1].set_ylim(0,1)
+    axs[test_fold, 1].legend()
 
-        axs[test_fold,2].set_xlabel('Epochs')
-        axs[test_fold,2].set_ylabel('Learning Rate')
-        axs[test_fold,2].set_title('Learning Rate Schedule for Different Folds')
-        axs[test_fold,2].set_ylim(0,lr+0.005)
-        axs[test_fold, 2].legend()
+    axs[test_fold,2].set_xlabel('Epochs')
+    axs[test_fold,2].set_ylabel('Learning Rate')
+    axs[test_fold,2].set_title('Learning Rate Schedule for Different Folds')
+    axs[test_fold,2].set_ylim(0,lr+0.005)
+    axs[test_fold, 2].legend()
+
+    plt.suptitle(f"Test Fold {test_fold}")
 
 
-    plt.title(f"Test Fold {test_fold}")
-    plt.show()
-    plt.savefig(f"/lustre/groups/iterm/sebnem/runs/01.07_13:42/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
+    model = Unet(
+    spatial_dims=3,
+    in_channels=1,
+    out_channels=1,
+    channels=(16, 32, 64, 128, 256),
+    up_kernel_size=3,
+    strides=(2,2,2,2)
+    ).to(device)
 
-    model = Unet()
     model.load_state_dict(torch.load(model_path))
     model.eval()
     with torch.no_grad():
@@ -305,6 +324,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 nib.save(output_nifti, output_filepath)
                 print(f"Saved")
 
+plt.tight_layout(rect=[0, 0, 1, 0.96])
+plt.show()
+#plt.savefig(f"/lustre/groups/iterm/sebnem/runs/01.07_13:42/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
 
-'''df = {'Fold' : [0,1,2,3,4], 'Best Dice': best_metric, 'Best Dice Epoch':best_metric_epoch}
-df.to_csv(os.path.join(directory,'folds'))'''
