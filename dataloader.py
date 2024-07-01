@@ -119,9 +119,8 @@ dice_metric = torchmetrics.Dice(zero_division=1).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,mode='max')
 
-max_epochs = 2
+max_epochs = 1500
 best_metric_epoch = -1
-best_metric = -1
 val_interval = 1
 fold = -1
 test_fold = -1
@@ -141,6 +140,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
     lr_values = []
     metric_values = []
     epoch_loss_values = []
+    best_metric = -1
 
     for i, (train_idx, val_idx) in enumerate(kfold.split(train_val_data)):
 
@@ -243,24 +243,24 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
         # Plotting the loss and dice scores
         colors = plt.cm.viridis(np.linspace(0, 1, 5))
 
-        axs[0].plot(range(1, max_epochs + 1), epoch_loss_values, label=f'Fold {fold+1}', color=colors[fold])
-        axs[1].plot(range(1, max_epochs + 1), metric_values, label=f'Fold {fold+1}', color=colors[fold])
-        axs[2].plot(range(1, len(lr_values) + 1), lr_values, label=f'Fold {fold+1}', color=colors[fold])
+        axs[test_fold,0].plot(range(1, max_epochs + 1), epoch_loss_values, label=f'Fold {fold+1}', color=colors[fold])
+        axs[test_fold,1].plot(range(1, max_epochs + 1), metric_values, label=f'Fold {fold+1}', color=colors[fold])
+        axs[test_fold,2].plot(range(1, len(lr_values) + 1), lr_values, label=f'Fold {fold+1}', color=colors[fold])
 
-        axs[0].set_xlabel('Epochs')
-        axs[0].set_ylabel('Loss')
-        axs[0].set_title('Dice Loss for Different Folds')
-        axs[0].set_ylim(0,1)
+        axs[test_fold,0].set_xlabel('Epochs')
+        axs[test_fold,0].set_ylabel('Loss')
+        axs[test_fold,0].set_title('Dice Loss for Different Folds')
+        axs[test_fold,0].set_ylim(0,1)
 
-        axs[1].set_xlabel('Epochs')
-        axs[1].set_ylabel('Dice Score')
-        axs[1].set_title('Dice Score for Different Folds')
-        axs[1].set_ylim(0,1)
+        axs[test_fold,1].set_xlabel('Epochs')
+        axs[test_fold,1].set_ylabel('Dice Score')
+        axs[test_fold,1].set_title('Dice Score for Different Folds')
+        axs[test_fold,1].set_ylim(0,1)
 
-        axs[2].set_xlabel('Epochs')
-        axs[2].set_ylabel('Learning Rate')
-        axs[2].set_title('Learning Rate Schedule for Different Folds')
-        axs[2].set_ylim(0,lr+0.005)
+        axs[test_fold,2].set_xlabel('Epochs')
+        axs[test_fold,2].set_ylabel('Learning Rate')
+        axs[test_fold,2].set_title('Learning Rate Schedule for Different Folds')
+        axs[test_fold,2].set_ylim(0,lr+0.005)
 
         for ax in axs:
             ax.legend()
