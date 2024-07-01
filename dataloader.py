@@ -251,19 +251,20 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
         axs[test_fold,0].set_ylabel('Loss')
         axs[test_fold,0].set_title('Dice Loss for Different Folds')
         axs[test_fold,0].set_ylim(0,1)
+        axs[test_fold, 0].legend()
 
         axs[test_fold,1].set_xlabel('Epochs')
         axs[test_fold,1].set_ylabel('Dice Score')
         axs[test_fold,1].set_title('Dice Score for Different Folds')
         axs[test_fold,1].set_ylim(0,1)
+        axs[test_fold, 1].legend()
 
         axs[test_fold,2].set_xlabel('Epochs')
         axs[test_fold,2].set_ylabel('Learning Rate')
         axs[test_fold,2].set_title('Learning Rate Schedule for Different Folds')
         axs[test_fold,2].set_ylim(0,lr+0.005)
+        axs[test_fold, 2].legend()
 
-        for ax in axs:
-            ax.legend()
 
     plt.title(f"Test Fold {test_fold}")
     plt.show()
