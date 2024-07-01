@@ -120,11 +120,11 @@ optimizer = torch.optim.Adam(model.parameters(), lr)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,threshold=0.00001, patience=50)
 
 max_epochs = 1500
-metric_values = np.empty(5,5,max_epochs)
-epoch_loss_values = np.empty(5,5,max_epochs)
-best_metric_epoch = np.empty(5,5)
-lr_values = np.ones(5,5,1000)
-best_metric = np.empty(5,5)
+metric_values = np.empty((5,5,max_epochs))
+epoch_loss_values = np.empty((5,5,max_epochs))
+best_metric_epoch = np.empty((5,5))
+lr_values = np.ones((5,5,1000))
+best_metric = np.empty((5,5))
 val_interval = 1
 fold = -1
 test_fold = -1
@@ -180,13 +180,13 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 optimizer.step()
                 scheduler.step(loss.item())
                 epoch_loss += loss.item()
-                lr_values[test_fold][fold].append(scheduler.get_last_lr())
+                lr_values[test_fold][fold][epoch].append(scheduler.get_last_lr())
                 print(
                     f"{step}/{len(train_data) // train_loader.batch_size}, "
                     f"train loss: {loss.item():.4f}")
 
             epoch_loss /= step
-            epoch_loss_values[test_fold][fold].append(epoch_loss)
+            epoch_loss_values[test_fold][fold][epoch].append(epoch_loss)
             print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
             if epoch % val_interval == 0:
@@ -229,7 +229,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                     metric = dice_metric.compute().item()
                     # reset the status for next validation round
                     dice_metric.reset()
-                    metric_values[test_fold][fold].append(metric)
+                    metric_values[test_fold][fold][epoch].append(metric)
                     print(f"Dice Value: {metric}")
 
                     if metric > best_metric[test_fold][fold]:
@@ -304,5 +304,5 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 print(f"Saved")
 
 
-df = {'Fold' : [0,1,2,3,4], 'Best Dice': best_metric, 'Best Dice Epoch':best_metric_epoch}
-df.to_csv(os.path.join(directory,'folds'))
+'''df = {'Fold' : [0,1,2,3,4], 'Best Dice': best_metric, 'Best Dice Epoch':best_metric_epoch}
+df.to_csv(os.path.join(directory,'folds'))'''
