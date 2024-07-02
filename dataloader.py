@@ -24,7 +24,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
-directory= "/lustre/groups/iterm/sebnem/runs/01.07_13:42/"
+directory= "/lustre/groups/iterm/sebnem/runs/02.07_11:56/"
 '''
 path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
