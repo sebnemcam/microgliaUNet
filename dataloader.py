@@ -192,8 +192,6 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
 
             epoch_loss /= step
             epoch_loss_values.append(epoch_loss)
-            print("append epoch loss")
-            print(f"list: {epoch_loss_values}")
             print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
             if epoch % val_interval == 0:
@@ -294,9 +292,10 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
     model.eval()
     with torch.no_grad():
         for test_data in test_loader:
-            img,seg = (
+            img,seg,names = (
                 test_data['image'].to(device),
-                test_data['segmentation'].to(device)
+                test_data['segmentation'].to(device),
+                test_data['name']
             )
             seg = seg.type(torch.short)
             outputs = model(val_img)
@@ -317,7 +316,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 output_nifti = nib.Nifti1Image(output_image, np.eye(4))
 
                 # define file names
-                output_filename = f"test_fold{test_fold}/outputs/{name}"
+                output_filename = f"test_fold{test_fold}/outputs/{names[i]}"
 
                 # save NIFTI images to temporary files
                 output_filepath = os.path.join(directory, output_filename)
