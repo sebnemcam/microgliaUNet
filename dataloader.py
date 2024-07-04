@@ -126,22 +126,27 @@ test_fold = 0
 
 for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
 
+    test_fold += 1
+    print(f"TEST FOLD {test_fold}")
+
     train_val_data = [data[i] for i in train_val_idx]
 
     test_data = [data[i] for i in test_idx]
     print(len(test_data))
     test_set = CacheDataset(test_data, dic_transforms)
 
-    test_fold += 1
-    print(f"TEST FOLD {test_fold}")
-
     fig, axs = plt.subplots(5, 3, figsize=(15, 10))
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+
     all_lr_values = []
     all_metric_values = []
     all_epoch_loss_values = []
     fold = 0
 
     for i, (train_idx, val_idx) in enumerate(kfold.split(train_val_data)):
+
+        fold += 1
+        print(f"TRAIN FOLD {fold}")
 
         train_data = [train_val_data[i] for i in train_idx]
         val_data = [train_val_data[i] for i in val_idx]
@@ -153,9 +158,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
         test_loader = DataLoader(test_set,batch_size=5)
         val_loader = DataLoader(val_set,batch_size=5)
 
-        fold += 1
         best_metric_epoch = -1
-        print(f"TRAIN FOLD {fold}")
 
         lr_values = []
         metric_values = []
@@ -323,8 +326,6 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 output_filepath = os.path.join(directory, output_filename)
                 nib.save(output_nifti, output_filepath)
                 print(f"Saved")
+    plt.savefig(f"/lustre/groups/iterm/sebnem/runs/04.07_12:00/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
 
-plt.tight_layout(rect=[0, 0, 1, 0.96])
-plt.show()
-plt.savefig(f"/lustre/groups/iterm/sebnem/runs/04.07_12:00/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
-
+plt.savefig(f"/lustre/groups/iterm/sebnem/runs/04.07_12:00/LearningCurves.png")
