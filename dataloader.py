@@ -24,7 +24,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
-directory= "/lustre/groups/iterm/sebnem/runs/02.07_11:56/"
+directory= "/lustre/groups/iterm/sebnem/runs/04.07_12:00/"
 '''
 path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
@@ -120,10 +120,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,mode='max')
 
 max_epochs = 1500
-best_metric_epoch = -1
 val_interval = 1
-fold = -1
-test_fold = -1
+test_fold = 0
 
 
 for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
@@ -131,6 +129,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
     train_val_data = [data[i] for i in train_val_idx]
 
     test_data = [data[i] for i in test_idx]
+    print(len(test_data))
     test_set = CacheDataset(test_data, dic_transforms)
 
     test_fold += 1
@@ -140,6 +139,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
     all_lr_values = []
     all_metric_values = []
     all_epoch_loss_values = []
+    fold = 0
 
     for i, (train_idx, val_idx) in enumerate(kfold.split(train_val_data)):
 
@@ -154,6 +154,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
         val_loader = DataLoader(val_set,batch_size=5)
 
         fold += 1
+        best_metric_epoch = -1
         print(f"TRAIN FOLD {fold}")
 
         lr_values = []
@@ -162,10 +163,8 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
         best_metric = -1
 
         for epoch in range(0, max_epochs):
-            #print(f"fold {fold}")
-            print(f"TRAINING WITH LEARNING RATE {lr}")
             print("-" * 10)
-            print(f"epoch {epoch + 1}/{max_epochs}")
+            print(f"epoch {epoch + 1}/{max_epochs} in train fold {fold}")
             model.train()
             epoch_loss = 0
             step = 0
@@ -242,7 +241,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                     if metric > best_metric:
                         best_metric = metric
                         best_metric_epoch= epoch +1
-                        print(f"Fold {fold} \nBest Dice {best_metric} \nat epoch{best_metric_epoch}")
+                        print(f"Train Fold {fold} \nBest Dice {best_metric} \nat epoch {best_metric_epoch}")
                         model_path = os.path.join(directory, "best_metric_model.pth")
                         torch.save(model.state_dict(),model_path)
 
@@ -254,27 +253,27 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
     colors = plt.cm.viridis(np.linspace(0, 1, 5))
 
     for fold in range(5):
-        axs[test_fold,0].plot(range(1, max_epochs + 1), all_epoch_loss_values[fold], label=f'Fold {fold+1}', color=colors[fold])
-        axs[test_fold,1].plot(range(1, max_epochs + 1), all_metric_values[fold], label=f'Fold {fold+1}', color=colors[fold])
-        axs[test_fold,2].plot(range(1, len(lr_values) + 1), all_lr_values[fold], label=f'Fold {fold+1}', color=colors[fold])
+        axs[test_fold-1,0].plot(range(1, max_epochs + 1), all_epoch_loss_values[fold], label=f'Fold {fold}', color=colors[fold])
+        axs[test_fold-1,1].plot(range(1, max_epochs + 1), all_metric_values[fold], label=f'Fold {fold}', color=colors[fold])
+        axs[test_fold-1,2].plot(range(1, len(lr_values) + 1), all_lr_values[fold], label=f'Fold {fold}', color=colors[fold])
 
-    axs[test_fold,0].set_xlabel('Epochs')
-    axs[test_fold,0].set_ylabel('Loss')
-    axs[test_fold,0].set_title('Dice Loss for Different Folds')
-    axs[test_fold,0].set_ylim(0,1)
-    axs[test_fold, 0].legend()
+    axs[test_fold-1,0].set_xlabel('Epochs')
+    axs[test_fold-1,0].set_ylabel('Loss')
+    axs[test_fold-1,0].set_title('Dice Loss for Different Folds')
+    axs[test_fold-1,0].set_ylim(0,1)
+    axs[test_fold-1, 0].legend()
 
-    axs[test_fold,1].set_xlabel('Epochs')
-    axs[test_fold,1].set_ylabel('Dice Score')
-    axs[test_fold,1].set_title('Dice Score for Different Folds')
-    axs[test_fold,1].set_ylim(0,1)
-    axs[test_fold, 1].legend()
+    axs[test_fold-1,1].set_xlabel('Epochs')
+    axs[test_fold-1,1].set_ylabel('Dice Score')
+    axs[test_fold-1,1].set_title('Dice Score for Different Folds')
+    axs[test_fold-1,1].set_ylim(0,1)
+    axs[test_fold-1, 1].legend()
 
-    axs[test_fold,2].set_xlabel('Epochs')
-    axs[test_fold,2].set_ylabel('Learning Rate')
-    axs[test_fold,2].set_title('Learning Rate Schedule for Different Folds')
-    axs[test_fold,2].set_ylim(0,lr+0.005)
-    axs[test_fold, 2].legend()
+    axs[test_fold-1,2].set_xlabel('Epochs')
+    axs[test_fold-1,2].set_ylabel('Learning Rate')
+    axs[test_fold-1,2].set_title('Learning Rate Schedule for Different Folds')
+    axs[test_fold-1,2].set_ylim(0,lr+0.005)
+    axs[test_fold-1, 2].legend()
 
     plt.suptitle(f"Test Fold {test_fold}")
 
@@ -298,9 +297,11 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 test_data['name']
             )
             seg = seg.type(torch.short)
-            outputs = model(val_img)
+            outputs = model(img)
             outputs[outputs < 0.5] = 0
             outputs[outputs >= 0.5] = 1
+            print(f"outputs {names} has shape {outputs.shape}")
+            print(f"target has shape {seg.shape}")
             dice_metric(preds=outputs, target=seg)
             metric = dice_metric.compute().item()
             dice_metric.reset()
@@ -325,5 +326,5 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
 
 plt.tight_layout(rect=[0, 0, 1, 0.96])
 plt.show()
-#plt.savefig(f"/lustre/groups/iterm/sebnem/runs/01.07_13:42/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
+plt.savefig(f"/lustre/groups/iterm/sebnem/runs/04.07_12:00/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
 
