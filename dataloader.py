@@ -24,7 +24,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
-directory= "/lustre/groups/iterm/sebnem/runs/unshuffled/09.07_22:33/"
+directory= "/lustre/groups/iterm/sebnem/runs/shuffled/09.07_22:33/"
 '''
 path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
@@ -67,7 +67,7 @@ val_files = [train_files_a[i] for i in range(int(ratio_b),len(train_files_a))]
 train_data = [{'image' : img, 'segmentation' : seg } for img,seg in train_files]
 val_data = [{'image' : img, 'segmentation' : seg } for img,seg in val_files]
 '''
-kfold = KFold(n_splits=5,shuffle=False,random_state=1)
+kfold = KFold(n_splits=5,shuffle=True,random_state=1)
 #data = [{'image' : img, 'segmentation' : seg} for img,seg in zipped_data]
 #print(f"images: {data[0]}")
 
@@ -331,8 +331,8 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 nib.save(output_nifti, output_filepath)
                 print(f"Saved {names[i]}")
 
-    plt.savefig(f"/lustre/groups/iterm/sebnem/runs/unshuffled/09.07_22:33/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
+    plt.savefig(f"/lustre/groups/iterm/sebnem/runs/shuffled/09.07_22:33/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
     df = {'filename': test_names,
           'dice score': test_dice_values}
     df.to_csv(os.path.join(directory,f'test_fold{test_fold}/batch_dice_scores.csv'))
-plt.savefig(f"/lustre/groups/iterm/sebnem/runs/unshuffled/09.07_22:33/LearningCurves.png")
+plt.savefig(f"/lustre/groups/iterm/sebnem/runs/shuffled/09.07_22:33/LearningCurves.png")
