@@ -247,7 +247,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                         best_metric = metric
                         best_metric_epoch= epoch +1
                         print(f"Train Fold {fold} \nBest Dice {best_metric} \nat epoch {best_metric_epoch}")
-                        model_path = os.path.join(directory, f"/test_fold{test_fold}/best_metric_model.pth")
+                        model_path = os.path.join(directory, f"test_fold{test_fold}/best_metric_model.pth")
                         torch.save(model.state_dict(),model_path)
 
         all_lr_values.append(lr_values)
