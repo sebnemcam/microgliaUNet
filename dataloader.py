@@ -67,7 +67,7 @@ val_files = [train_files_a[i] for i in range(int(ratio_b),len(train_files_a))]
 train_data = [{'image' : img, 'segmentation' : seg } for img,seg in train_files]
 val_data = [{'image' : img, 'segmentation' : seg } for img,seg in val_files]
 '''
-kfold = KFold(n_splits=5,shuffle=True,random_state=1)
+kfold = KFold(n_splits=5,shuffle=False,random_state=1)
 #data = [{'image' : img, 'segmentation' : seg} for img,seg in zipped_data]
 #print(f"images: {data[0]}")
 
