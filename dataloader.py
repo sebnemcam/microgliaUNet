@@ -24,7 +24,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
-directory= "/lustre/groups/iterm/sebnem/runs/04.07_12:00/"
+directory= "/lustre/groups/iterm/sebnem/runs/shuffled/09.07_22:33/"
 '''
 path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
@@ -123,6 +123,7 @@ max_epochs = 1500
 val_interval = 1
 test_fold = 0
 
+fig, axs = plt.subplots(5, 3, figsize=(15, 10))
 
 for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
 
@@ -135,13 +136,14 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
     print(len(test_data))
     test_set = CacheDataset(test_data, dic_transforms)
 
-    fig, axs = plt.subplots(5, 3, figsize=(15, 10))
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
     all_lr_values = []
     all_metric_values = []
     all_epoch_loss_values = []
     fold = 0
+    test_dice_values = []
+    test_names = []
 
     for i, (train_idx, val_idx) in enumerate(kfold.split(train_val_data)):
 
@@ -245,7 +247,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                         best_metric = metric
                         best_metric_epoch= epoch +1
                         print(f"Train Fold {fold} \nBest Dice {best_metric} \nat epoch {best_metric_epoch}")
-                        model_path = os.path.join(directory, "best_metric_model.pth")
+                        model_path = os.path.join(directory, f"/test_fold{test_fold}/best_metric_model.pth")
                         torch.save(model.state_dict(),model_path)
 
         all_lr_values.append(lr_values)
@@ -299,6 +301,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 test_data['segmentation'].to(device),
                 test_data['name']
             )
+            test_names.append(names)
             seg = seg.type(torch.short)
             outputs = model(img)
             outputs[outputs < 0.5] = 0
@@ -308,6 +311,7 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
             dice_metric(preds=outputs, target=seg)
             metric = dice_metric.compute().item()
             dice_metric.reset()
+            test_dice_values.append([metric,metric,metric,metric,metric])
             print(f"Test Dice Value: {metric}")
 
             outputs_np = outputs.cpu().numpy()
@@ -325,7 +329,10 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 # save NIFTI images to temporary files
                 output_filepath = os.path.join(directory, output_filename)
                 nib.save(output_nifti, output_filepath)
-                print(f"Saved")
-    plt.savefig(f"/lustre/groups/iterm/sebnem/runs/04.07_12:00/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
+                print(f"Saved {names[i]}")
 
-plt.savefig(f"/lustre/groups/iterm/sebnem/runs/04.07_12:00/LearningCurves.png")
+    plt.savefig(f"/lustre/groups/iterm/sebnem/runs/shuffled/09.07_22:33/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
+    df = {'filename': test_names,
+          'dice score': test_dice_values}
+    df.to_csv(os.path.join(directory,f'test_fold{test_fold}/batch_dice_scores.csv'))
+plt.savefig(f"/lustre/groups/iterm/sebnem/runs/shuffled/09.07_22:33/LearningCurves.png")
