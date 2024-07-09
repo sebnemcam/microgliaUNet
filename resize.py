@@ -31,13 +31,18 @@ for i in range(len(img_list)):
         nib.save(new_img, os.path.join(path_img, "/Users/sebnemcam/Desktop/new_img"))
 '''
 
-nifti_file_path = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/patchvolume_2433_1.nii.gz"
-img = nib.load(nifti_file_path)
-data = img.get_fdata()
-resize = Resize(spatial_size=(128,128,128))
-resized_data = resize(data[np.newaxis, ...])[0]  # Adding a channel dimension
+nifti_file_path = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new/"
 
-# Create a new NIfTI image
-new_img = nib.Nifti1Image(resized_data, img.affine, img.header)
-new_nifti_file_path = "/Users/sebnemcam/Desktop/new_raw"
-nib.save(new_img, new_nifti_file_path)
+seg_list = os.listdir(nifti_file_path)
+
+for file in seg_list:
+
+    img = nib.load(os.path.join(nifti_file_path,file))
+    data = img.get_fdata()
+    resize = Resize(spatial_size=(128,128,128))
+    resized_data = resize(data[np.newaxis, ...])[0]  # Adding a channel dimension
+
+    # Create a new NIfTI image
+    new_img = nib.Nifti1Image(resized_data, img.affine, img.header)
+    new_nifti_file_path = os.path.join("/lustre/groups/iterm/sebnem/resized_gt/",file)
+    nib.save(new_img, new_nifti_file_path)
