@@ -24,7 +24,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
-directory= "/lustre/groups/iterm/sebnem/runs/shuffled/09.07_22:33/"
+directory= "/lustre/groups/iterm/sebnem/runs/test"
 '''
 path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
@@ -119,7 +119,7 @@ dice_metric = torchmetrics.Dice(zero_division=1).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,mode='max')
 
-max_epochs = 1500
+max_epochs = 1
 val_interval = 1
 test_fold = 0
 
@@ -331,8 +331,9 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
                 nib.save(output_nifti, output_filepath)
                 print(f"Saved {names[i]}")
 
-    plt.savefig(f"/lustre/groups/iterm/sebnem/runs/shuffled/09.07_22:33/test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png")
-    df = {'filename': test_names,
+    plt.savefig(os.path.join(directory,f"test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png"))
+    dict = {'filename': test_names,
           'dice score': test_dice_values}
+    df = pd.DataFrame()
     df.to_csv(os.path.join(directory,f'test_fold{test_fold}/batch_dice_scores.csv'))
-plt.savefig(f"/lustre/groups/iterm/sebnem/runs/shuffled/09.07_22:33/LearningCurves.png")
+plt.savefig(os.path.join(directory,"LearningCurves.png"))
