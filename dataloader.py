@@ -24,7 +24,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
-directory= "/lustre/groups/iterm/sebnem/runs/test"
+directory= "/lustre/groups/iterm/sebnem/runs/now"
 '''
 path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
 path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
@@ -119,8 +119,8 @@ dice_metric = torchmetrics.Dice(zero_division=1).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,mode='max')
 
-max_epochs = 1
-val_interval = 2
+max_epochs = 1500
+val_interval = 1
 test_fold = 0
 
 fig, axs = plt.subplots(5, 3, figsize=(15, 10))
