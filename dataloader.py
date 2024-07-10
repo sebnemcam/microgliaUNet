@@ -120,7 +120,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,mode='max')
 
 max_epochs = 1
-val_interval = 1
+val_interval = 2
 test_fold = 0
 
 fig, axs = plt.subplots(5, 3, figsize=(15, 10))
@@ -311,10 +311,10 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
             dice_metric(preds=outputs, target=seg)
             metric = dice_metric.compute().item()
             dice_metric.reset()
-            test_dice_values.append([metric,metric,metric,metric,metric])
             print(f"Test Dice Value: {metric}")
 
             outputs_np = outputs.cpu().numpy()
+            test_dice_values.append([metric] *outputs_np.shape[0])
 
             for i in range(outputs_np.shape[0]):
                 # Extract the ith sample, first channel, all depth, height, and width slices
@@ -334,6 +334,6 @@ for i, (train_val_idx, test_idx) in enumerate(kfold.split(data)):
     plt.savefig(os.path.join(directory,f"test_fold{test_fold}/LearningCurvesTestFold{test_fold}.png"))
     dict = {'filename': test_names,
           'dice score': test_dice_values}
-    df = pd.DataFrame()
+    df = pd.DataFrame(dict)
     df.to_csv(os.path.join(directory,f'test_fold{test_fold}/batch_dice_scores.csv'))
 plt.savefig(os.path.join(directory,"LearningCurves.png"))
