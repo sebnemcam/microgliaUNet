@@ -1,35 +1,23 @@
-import logging
 import os
-import time
-
 import pandas as pd
-
 import numpy as np
 from sklearn.model_selection import KFold
 import matplotlib.pyplot as plt
 import nibabel as nib
 import torch
 import torchmetrics
-
-from monai.data import ArrayDataset, DataLoader, CacheDataset
+from monai.data import DataLoader, CacheDataset
 from monai.networks.nets import Unet
-from monai.networks.layers import Norm
-from monai.losses import DiceLoss, DiceCELoss
-from monai.metrics import DiceMetric
+from monai.losses import DiceLoss
 from monai.transforms import Compose, LoadImaged, Resized, ToTensord, RandFlipd
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-#!!!!!!PATH NEEDS TO BE ADJUSTED FOR HPC !!!!!!!!!
-
 path_seg = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/gt_new"
 path_img = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Microglia - Microglia LSM and Confocal/input cxc31/raw_new"
 directory= "/lustre/groups/iterm/sebnem/runs/now"
-'''
-path_seg = "/Users/sebnemcam/Desktop/microglia/input cxc31/gt_new/"
-path_img = "/Users/sebnemcam/Desktop/microglia/input cxc31/raw_new/"
-directory = "/Users/sebnemcam/Desktop/Helmholtz/"
-'''
+
+
 
 seg_list = os.listdir(path_seg)
 img_list = os.listdir(path_img)
@@ -38,44 +26,21 @@ images = []
 
 data = []
 
-print("I am inside the python file")
 
 for i in range(len(seg_list)):
     if "nii.gz" in seg_list[i] and img_list[i] == seg_list[i]:
 
         segFile = os.path.join(path_seg, seg_list[i])
         segmentations.append(segFile)
+        print(segFile)
+        print(segmentations)
 
         imgFile = os.path.join(path_img, img_list[i])
         images.append(imgFile)
         data.append([{'image' : imgFile, 'segmentation' : segFile, 'name': img_list[i]}])
 
-# zip data into one list of image/segmenttaion pairs
-#zipped_data = list(zip(images,segmentations))
-#print(f"Zip length: {len(zipped_data)}")
 
-#split into train, test & validation files
-#ratio_a = len(zipped_data)*0.8
-#train_files_a = [zipped_data[i] for i in range(int(ratio_a))]
-#test_files = [zipped_data[i] for i in range(int(ratio_a),len(zipped_data))]
-
-'''
-ratio_b = len(train_files_a)*0.8
-train_files = [train_files_a[i] for i in range(int(ratio_b))]
-val_files = [train_files_a[i] for i in range(int(ratio_b),len(train_files_a))]
-
-train_data = [{'image' : img, 'segmentation' : seg } for img,seg in train_files]
-val_data = [{'image' : img, 'segmentation' : seg } for img,seg in val_files]
-'''
 kfold = KFold(n_splits=5,shuffle=True,random_state=1)
-#data = [{'image' : img, 'segmentation' : seg} for img,seg in zipped_data]
-#print(f"images: {data[0]}")
-
-'''
-print(f"Len Train Data: {len(train_data)}")
-print(f"Len Val Data: {len(val_data)}")
-print(f"Len Test Data: {len(test_data)}")
-'''
 
 keys = ['image','segmentation']
 
@@ -98,8 +63,6 @@ dic_transforms = Compose(
         ToTensord(keys)
     ]
 )
-
-#test_set = CacheDataset(test_files,dic_transforms)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
