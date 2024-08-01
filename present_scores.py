@@ -3,11 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Dice scores for each fold
-fold1 = pd.read_csv('/Users/sebnemcam/Desktop/dices/new_test_fold1_instance_scores.csv')
-fold2 = pd.read_csv('/Users/sebnemcam/Desktop/dices/new_test_fold2_instance_scores.csv')
-fold3 = pd.read_csv('/Users/sebnemcam/Desktop/dices/new_test_fold3_instance_scores.csv')
-fold4 = pd.read_csv('/Users/sebnemcam/Desktop/dices/new_test_fold4_instance_scores.csv')
-fold5 = pd.read_csv('/Users/sebnemcam/Desktop/dices/new_test_fold5_instance_scores.csv')
+fold1 = pd.read_csv('')
+fold2 = pd.read_csv('')
+fold3 = pd.read_csv('')
+fold4 = pd.read_csv('')
+fold5 = pd.read_csv('')
 
 # no NaN values
 fold1['Dice'] = fold1['Dice'].dropna()
@@ -49,7 +49,7 @@ summary_table.loc['Overall'] = ['Overall', overall_mean, overall_std, overall_mi
 # Print the summary table
 print(summary_table)
 
-summary_table.to_csv('/Users/sebnemcam/Desktop/dices/instance_summary_table.csv', index=False)
+summary_table.to_csv('', index=False)
 
 # Box plot for visualization
 

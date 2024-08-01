@@ -1,8 +1,7 @@
 import os
 import nibabel as nib
 import numpy as np
-import torch
-from monai.transforms import Compose, LoadImage, Resize
+from monai.transforms import Resize
 
 '''
 Resized the raw data we already have to match the size of our output data
